@@ -29,6 +29,7 @@ public class SnapFlowEditor : Editor
 
     private void OnEnable()
     {
+      
         stepsProperty = serializedObject.FindProperty("steps");
         stepCompleteSound = serializedObject.FindProperty("stepCompleteSound");
         HighlightMaterial = serializedObject.FindProperty("HighlightMaterial");
@@ -41,6 +42,7 @@ public class SnapFlowEditor : Editor
         reorderableSteps.drawHeaderCallback = rect =>
         {
             EditorGUI.LabelField(rect, "Assembly Steps");
+            
 
             Rect clearButtonRect = new Rect(rect.xMax - 200, rect.y, 90, EditorGUIUtility.singleLineHeight);
             Rect autoDescButtonRect = new Rect(rect.xMax - 100, rect.y, 90, EditorGUIUtility.singleLineHeight);

@@ -6,6 +6,8 @@ using UnityEngine.Events;
 using TMPro;
 using Slider = UnityEngine.UI.Slider;
 
+
+
 public class AssemblyStepManager : MonoBehaviour
 {
     [Serializable]
@@ -33,16 +35,23 @@ public class AssemblyStepManager : MonoBehaviour
     
     public int _currentStep = 0;
 
+
+    private void Awake()
+    {
+        this.gameObject.transform.name = "Snap Flow Manager";
+    }
+
     private void Start()
     {
         SetupStep(_currentStep);
         UpdateProgress();
+
         
-        
+
+
     }
     
     
-
     private void SetupStep(int stepIndex)
     {
         if (stepIndex >= steps.Count)
