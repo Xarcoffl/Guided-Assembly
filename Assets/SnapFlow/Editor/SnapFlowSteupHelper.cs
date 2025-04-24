@@ -136,7 +136,7 @@ public class SnapFlowSteupHelper : Editor
         
         
 
-        if (GUILayout.Button("Assign Object to Step"))
+        if (GUILayout.Button("Assign"))
         {
             var step = steps[selectedStepIndex];
 
