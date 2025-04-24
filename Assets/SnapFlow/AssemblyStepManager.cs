@@ -38,17 +38,13 @@ public class AssemblyStepManager : MonoBehaviour
 
     private void Awake()
     {
-        this.gameObject.transform.name = "Snap Flow Manager";
+        
     }
 
     private void Start()
     {
         SetupStep(_currentStep);
         UpdateProgress();
-
-        
-
-
     }
     
     

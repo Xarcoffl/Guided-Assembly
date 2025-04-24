@@ -24,8 +24,8 @@ public class SnapFlowEditor : Editor
     private ReorderableList reorderableSteps;
     private List<bool> foldoutStates = new();
 
-    private bool showDebugLogs = false;
-    private bool showGizmos = false;
+    private bool showDebugLogs ;
+    private bool showGizmos ;
 
     private void OnEnable()
     {
@@ -41,7 +41,8 @@ public class SnapFlowEditor : Editor
         reorderableSteps = new ReorderableList(serializedObject, stepsProperty, true, true, false, true);
         reorderableSteps.drawHeaderCallback = rect =>
         {
-            EditorGUI.LabelField(rect, "Assembly Steps");
+            
+            EditorGUI.LabelField(rect, "Assembly Steps", EditorStyles.boldLabel);
             
 
             Rect clearButtonRect = new Rect(rect.xMax - 200, rect.y, 90, EditorGUIUtility.singleLineHeight);
@@ -49,7 +50,7 @@ public class SnapFlowEditor : Editor
 
             if (GUI.Button(clearButtonRect, "Reset"))
             {
-                if (EditorUtility.DisplayDialog("Confirm Clear", "Are you sure you want to remove all steps?", "Yes", "Cancel"))
+                if (EditorUtility.DisplayDialog("Confirm Clear", "Are you sure you want to remove all steps?", "Confirm", "Cancel"))
                 {
                     stepsProperty.ClearArray();
                     foldoutStates.Clear();
@@ -131,12 +132,11 @@ public class SnapFlowEditor : Editor
                 EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, snapHeight), snapEvents, new GUIContent("Snap Events"), true);
                 yOffset += snapHeight + 10;
 
-                
-
                 EditorGUI.indentLevel--;
             }
         };
 
+        
         reorderableSteps.elementHeightCallback = index =>
         {
             SyncFoldoutList();
@@ -195,15 +195,21 @@ public class SnapFlowEditor : Editor
 
     private void DrawGeneralSettings()
     {
-        EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(stepCompleteSound, new GUIContent("Step Complete Sound"));
-        EditorGUILayout.PropertyField(errorSound, new GUIContent("Error Sound"));
+      
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Sound Clips",EditorStyles.whiteLabel);
+        EditorGUILayout.PropertyField(stepCompleteSound, new GUIContent("Success Soundclip"));
+        EditorGUILayout.PropertyField(errorSound, new GUIContent("Error Soundclip"));
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Highlights and Description",EditorStyles.whiteLabel);
         EditorGUILayout.PropertyField(HighlightMaterial, new GUIContent("Highlight Material"));
+        EditorGUILayout.PropertyField(stepDescriptionText, new GUIContent("Step Description Text"));
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
         EditorGUILayout.PropertyField(progressBar, new GUIContent("Progress Bar"));
         EditorGUILayout.PropertyField(progressText, new GUIContent("Progress Text"));
-        EditorGUILayout.PropertyField(stepDescriptionText, new GUIContent("Step Description Text"));
-
-        GUILayout.Space(5);
+        GUILayout.Space(20);
+        EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
         showDebugLogs = EditorGUILayout.Toggle("Enable Debug Logs", showDebugLogs);
         showGizmos = EditorGUILayout.Toggle("Visualize Gizmos", showGizmos);
         SnapFlowEditorGizmos.ShowGizmos = showGizmos;

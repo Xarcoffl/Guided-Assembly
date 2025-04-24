@@ -82,6 +82,7 @@ public class SnapFlowSteupHelper : Editor
                     go.GetComponent<Grabbable>().GrabPhysics = GrabPhysics.FixedJoint;
                     go.GetComponent<SnapZone>().CanRemoveItem = false;
                     go.GetComponent<Rigidbody>().isKinematic = true;
+                    
                 }
             }
             else
