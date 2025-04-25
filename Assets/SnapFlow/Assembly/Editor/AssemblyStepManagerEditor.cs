@@ -268,6 +268,7 @@ public static class SnapFlowEditorGizmos
         {
             var steps = manager.steps;
             if (steps == null || steps.Count == 0) return;
+            
 
             for (int i = 0; i < steps.Count; i++)
             {
@@ -311,6 +312,9 @@ public static class SnapFlowEditorGizmos
                     }
                 }
             }
+            
+            manager.gameObject.name = "SNAP FLOW MANAGER";
+            
         }
     }
 }

@@ -111,8 +111,6 @@ public class SnapFlowSteupHelper : Editor
             EditorGUILayout.HelpBox("No AssemblyStepManager found in scene.", MessageType.Warning);
             return;
         }
-        
-        
 
         string[] managerNames = managers.Select(m => m.name).ToArray();
         int currentManagerIndex = assemblyManager != null ? managers.ToList().IndexOf(assemblyManager) : 0;
@@ -161,6 +159,6 @@ public class SnapFlowSteupHelper : Editor
     private void RefreshStepList()
     {
         steps = assemblyManager.steps;
-        stepLabels = steps.Select((s, i) => $"Step {i}: {s.StepDescription}").ToList();
+        stepLabels = steps.Select((s, i) => $"Step {i+1}: {s.StepDescription}").ToList();
     }
 }
