@@ -135,7 +135,7 @@ public class SnapFlowEditor : Editor
                 EditorGUI.indentLevel--;
             }
         };
-
+        
         
         reorderableSteps.elementHeightCallback = index =>
         {
@@ -189,7 +189,14 @@ public class SnapFlowEditor : Editor
             
             normal = { textColor = SnapFlowBlue}
         };
+
+        GUIStyle taglinestyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontStyle = FontStyle.Bold
+        };
         GUILayout.Label("SNAP FLOW", titleStyle);
+        GUILayout.Label("Assembly Editor", taglinestyle);
         GUILayout.Space(10);
     }
 
@@ -313,7 +320,7 @@ public static class SnapFlowEditorGizmos
                 }
             }
             
-            manager.gameObject.name = "SNAP FLOW MANAGER";
+            manager.gameObject.name = "Snap Flow - Assembly";
             
         }
     }

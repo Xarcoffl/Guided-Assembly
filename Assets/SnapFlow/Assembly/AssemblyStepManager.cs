@@ -4,6 +4,7 @@ using UnityEngine;
 using BNG;
 using UnityEngine.Events;
 using TMPro;
+using UnityEditor;
 using UnityEngine.UI;
 using Slider = UnityEngine.UI.Slider;
 
@@ -17,32 +18,42 @@ public class AssemblyStepManager : MonoBehaviour
         public string StepDescription;
         public UnityEvent onGrabEvents;
         public UnityEvent onSnapEvents;
+
+        [HideInInspector] public Vector3 initialPosition;
+        [HideInInspector] public Quaternion initialRotation;
     }
 
-    [Header("Assembly Configuration")]
+    public enum StepMode { Assembly, Disassembly }
+    public StepMode currentMode = StepMode.Assembly;
+
     public List<AssemblyStep> steps = new();
     public AudioClip stepCompleteSound;
     public AudioClip errorSound;
     public Material HighlightMaterial;
-
-    [Header("UI")]
     public Slider progressBar;
     public TextMeshProUGUI progressText;
     public TextMeshProUGUI stepDescriptionText;
-
-    [Header("Events")]
     public UnityEvent onAssemblyComplete;
 
     private int _currentStep = 0;
+    private HashSet<int> disassembledSteps = new();
 
-    private Dictionary<Renderer, Material> originalMaterials = new();
-    private Dictionary<Grabbable, (Vector3, Quaternion)> initialTransforms = new();
+
+  
 
     private void Start()
     {
         CacheInitialTransforms();
+
+        if (currentMode == StepMode.Disassembly)
+        {
+            _currentStep = steps.Count - 1;
+            foreach (var s in steps)
+                if (s.targetSnapZone) s.targetSnapZone.StartingItem = s.objectToGrab;
+        }
+
         SetupStep(_currentStep);
-        UpdateProgress();
+        UpdateProgressUI();
     }
 
     private void CacheInitialTransforms()
@@ -51,75 +62,53 @@ public class AssemblyStepManager : MonoBehaviour
         {
             if (step.objectToGrab != null)
             {
-                initialTransforms[step.objectToGrab] = (step.objectToGrab.transform.position, step.objectToGrab.transform.rotation);
-                CacheOriginalMaterial(step.objectToGrab.GetComponent<Renderer>());
+                step.initialPosition = step.objectToGrab.transform.position;
+                step.initialRotation = step.objectToGrab.transform.rotation;
             }
-
-            if (step.targetSnapZone != null)
-            {
-                CacheOriginalMaterial(step.targetSnapZone.GetComponent<Renderer>());
-            }
-        }
-    }
-
-    private void CacheOriginalMaterial(Renderer renderer)
-    {
-        if (renderer != null && !originalMaterials.ContainsKey(renderer))
-        {
-            originalMaterials[renderer] = renderer.material;
         }
     }
 
     private void SetupStep(int stepIndex)
     {
-        if (stepIndex >= steps.Count)
+        if (stepIndex < 0 || stepIndex >= steps.Count)
         {
-            Debug.Log("All steps completed!");
-            onAssemblyComplete?.Invoke();
+            Debug.Log("All steps completed.");
             return;
         }
 
         foreach (var s in steps)
-        {
-            if (s.targetSnapZone != null)
-                s.targetSnapZone.enabled = false;
-        }
+            if (s.targetSnapZone != null) s.targetSnapZone.enabled = false;
 
         var step = steps[stepIndex];
-
         if (step.targetSnapZone != null)
-        {
             step.targetSnapZone.enabled = true;
-            step.targetSnapZone.OnSnapEvent.RemoveAllListeners();
-            step.targetSnapZone.OnSnapEvent.AddListener((snappedObj) => OnObjectSnapped(snappedObj, stepIndex));
-        }
 
-        if (step.objectToGrab != null)
+        if (currentMode == StepMode.Assembly)
         {
+            HighlightObject(step.objectToGrab, true);
+
             var grabEvents = step.objectToGrab.GetComponent<GrabbableUnityEvents>();
             if (grabEvents)
-            {
-                grabEvents.onGrab.RemoveAllListeners();
-                grabEvents.onGrab.AddListener((_) => OnObjectGrabbed(stepIndex));
-            }
-            else
-            {
-                Debug.LogWarning("GrabbableEvents script missing on " + step.objectToGrab.name);
-            }
+                grabEvents.onGrab.AddListener((GrabbableUnityEvents) => OnObjectGrabbed(stepIndex));
 
-            HighlightObject(step.objectToGrab, true);
+            step.targetSnapZone.OnSnapEvent.RemoveAllListeners();
+            step.targetSnapZone.OnSnapEvent.AddListener((snapped) => OnObjectSnapped(snapped, stepIndex));
+        }
+        else
+        {
+            HighlightSnapZone(step.targetSnapZone, true);
+            step.targetSnapZone.OnDetachEvent.RemoveAllListeners();
+            step.targetSnapZone.OnDetachEvent.AddListener((unsnapped) => OnObjectUnsnapped(unsnapped, stepIndex));
         }
     }
 
     private void OnObjectGrabbed(int stepIndex)
     {
         var step = steps[stepIndex];
-
-        Debug.Log("Object grabbed");
         HighlightObject(step.objectToGrab, false);
         HighlightSnapZone(step.targetSnapZone, true);
-
         step.onGrabEvents?.Invoke();
+        Debug.Log($"Grabbed: {step.objectToGrab.name}");
     }
 
     private void OnObjectSnapped(Grabbable snappedObject, int stepIndex)
@@ -128,79 +117,126 @@ public class AssemblyStepManager : MonoBehaviour
 
         if (snappedObject != step.objectToGrab)
         {
-            Debug.LogWarning("Wrong object placed in snap zone: " + snappedObject.name);
-
-            if (errorSound) AudioSource.PlayClipAtPoint(errorSound, snappedObject.transform.position);
-            TriggerErrorHaptics();
-            ResetObject(snappedObject);
+            Debug.LogWarning("Wrong object placed!");
+            TriggerErrorFeedback(snappedObject.transform.position);
+            ResetObject(step);
             return;
         }
 
-        Debug.Log("Correct object snapped");
-
         HighlightSnapZone(step.targetSnapZone, false);
         step.onSnapEvents?.Invoke();
-
-        if (stepCompleteSound) AudioSource.PlayClipAtPoint(stepCompleteSound, step.targetSnapZone.transform.position);
+        PlaySound(stepCompleteSound, step.targetSnapZone.transform.position);
 
         _currentStep++;
-        UpdateProgress();
+        UpdateProgressUI();
 
         if (_currentStep < steps.Count)
             SetupStep(_currentStep);
         else
-        {
-            Debug.Log("Assembly Completed!");
             onAssemblyComplete?.Invoke();
+    }
+
+    private void OnObjectUnsnapped(Grabbable obj, int stepIndex)
+    {
+        var step = steps[stepIndex];
+        if (obj != step.objectToGrab)
+        {
+            Debug.LogWarning("Wrong object removed!");
+            TriggerErrorFeedback(obj.transform.position);
+            return;
         }
+
+        if (disassembledSteps.Contains(stepIndex)) return;
+
+        HighlightSnapZone(step.targetSnapZone, false);
+        step.onSnapEvents?.Invoke();
+        disassembledSteps.Add(stepIndex);
+        PlaySound(stepCompleteSound, step.targetSnapZone.transform.position);
+
+        _currentStep--;
+        UpdateProgressUI();
+
+        if (_currentStep >= 0)
+            SetupStep(_currentStep);
+        else
+            onAssemblyComplete?.Invoke();
     }
 
     private void HighlightObject(Grabbable obj, bool highlight)
     {
-        var renderer = obj ? obj.GetComponent<Renderer>() : null;
-        if (renderer)
+        var renderers = obj.GetComponentsInChildren<MeshRenderer>();
+        foreach (var rend in renderers)
         {
-            renderer.material = highlight ? HighlightMaterial : GetOriginalMaterial(renderer);
+            if (rend != null)
+                rend.material = highlight ? HighlightMaterial : rend.sharedMaterial;
         }
     }
 
     private void HighlightSnapZone(SnapZone zone, bool highlight)
     {
-        var renderer = zone ? zone.GetComponent<Renderer>() : null;
-        if (renderer)
+        var renderers = zone.GetComponentsInChildren<MeshRenderer>();
+        foreach (var rend in renderers)
         {
-            renderer.material = highlight ? HighlightMaterial : GetOriginalMaterial(renderer);
+            if (rend != null)
+                rend.material = highlight ? HighlightMaterial : rend.sharedMaterial;
         }
     }
 
-    private Material GetOriginalMaterial(Renderer renderer)
+    private void UpdateProgressUI()
     {
-        return originalMaterials.TryGetValue(renderer, out var mat) ? mat : renderer.material;
+        UpdateProgressBar();
+        UpdateProgressText();
+        UpdateStepDescription();
     }
 
-    private void UpdateProgress()
+    private void UpdateProgressBar()
     {
-        if (progressBar) progressBar.value = (float)_currentStep / steps.Count;
-        if (progressText) progressText.text = $"Step {_currentStep + 1}/{steps.Count}";
-        if (stepDescriptionText && _currentStep < steps.Count)
-        {
-            stepDescriptionText.text = steps[_currentStep].StepDescription;
-        }
+        if (progressBar == null) return;
+
+        float val = currentMode == StepMode.Assembly ?
+            (float)_currentStep / steps.Count :
+            (float)(steps.Count - _currentStep - 1) / steps.Count;
+
+        progressBar.value = val;
     }
 
-    private void ResetObject(Grabbable obj)
+    private void UpdateProgressText()
     {
-        if (obj == null || !initialTransforms.ContainsKey(obj)) return;
+        if (progressText == null) return;
 
-        var rb = obj.GetComponent<Rigidbody>();
-        if (rb)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+        string label = currentMode == StepMode.Assembly ?
+            $"Step {(_currentStep + 1)}/{steps.Count} (Assembly Mode)" :
+            $"Step {(_currentStep + 1)}/{steps.Count} (Disassembly Mode)";
 
-        var (pos, rot) = initialTransforms[obj];
-        obj.transform.SetPositionAndRotation(pos, rot);
+        progressText.text = label;
+    }
+
+    private void UpdateStepDescription()
+    {
+        if (stepDescriptionText == null || _currentStep < 0 || _currentStep >= steps.Count)
+            return;
+
+        stepDescriptionText.text = steps[_currentStep].StepDescription;
+    }
+
+    private void ResetObject(AssemblyStep step)
+    {
+        if (step.objectToGrab == null) return;
+
+        step.objectToGrab.transform.position = step.initialPosition;
+        step.objectToGrab.transform.rotation = step.initialRotation;
+    }
+
+    private void PlaySound(AudioClip clip, Vector3 position)
+    {
+        if (clip)
+            AudioSource.PlayClipAtPoint(clip, position);
+    }
+
+    private void TriggerErrorFeedback(Vector3 position)
+    {
+        PlaySound(errorSound, position);
+        TriggerErrorHaptics();
     }
 
     private void TriggerErrorHaptics(float frequency = 0.7f, float amplitude = 0.7f, float duration = 0.15f)
