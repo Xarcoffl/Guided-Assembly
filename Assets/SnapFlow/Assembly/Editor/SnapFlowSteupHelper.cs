@@ -150,20 +150,28 @@ public class SnapFlowSetupHelper : Editor
 
     private void AssignSelectedStep(GameObject go)
     {
-        var step = steps[selectedStepIndex];
+        Undo.RecordObject(assemblyManager, "Assign Step Object");
 
         if (assignType == AssignmentType.ObjectToGrab)
         {
-            Undo.RecordObject(assemblyManager, "Assign ObjectToGrab");
-            step.objectToGrab = go.GetComponent<Grabbable>();
+            assemblyManager.steps[selectedStepIndex].objectToGrab = go.GetComponent<Grabbable>();
         }
         else
         {
-            Undo.RecordObject(assemblyManager, "Assign TargetSnapZone");
-            step.targetSnapZone = go.GetComponent<SnapZone>();
+            assemblyManager.steps[selectedStepIndex].targetSnapZone = go.GetComponent<SnapZone>();
         }
 
         EditorUtility.SetDirty(assemblyManager);
+
+        // Auto-ping the object in the Hierarchy
+        EditorGUIUtility.PingObject(go);
+
+        // Focus the object in the Scene view
+        if (SceneView.lastActiveSceneView != null)
+        {
+            SceneView.lastActiveSceneView.Frame(go.GetComponent<Renderer>()?.bounds ?? new Bounds(go.transform.position, Vector3.one), false);
+        }
+
         Debug.Log($"Assigned '{go.name}' to Step {selectedStepIndex + 1} as {assignType}.");
     }
 

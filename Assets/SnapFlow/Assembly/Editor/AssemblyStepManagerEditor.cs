@@ -1,327 +1,334 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using System.Collections.Generic;
-using BNG;
-using UnityEditor.SceneManagement;
-using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
-[CustomEditor(typeof(AssemblyStepManager))]
-public class SnapFlowEditor : Editor
+namespace SnapFlow.Assembly.Editor
 {
-    private static readonly Color SnapFlowBlue = new Color(0.2f, 0.5f, 0.8f);
-    private static readonly Color SnapFlowOrange = new Color(1f, 0.6f, 0.2f);
-
-    private SerializedProperty stepsProperty;
-    private SerializedProperty stepCompleteSound;
-    private SerializedProperty errorSound;
-    private SerializedProperty HighlightMaterial;
-    private SerializedProperty progressBar;
-    private SerializedProperty progressText;
-    private SerializedProperty stepDescriptionText;
-
-    private ReorderableList reorderableSteps;
-    private List<bool> foldoutStates = new();
-
-    private bool showDebugLogs ;
-    private bool showGizmos ;
-
-    private void OnEnable()
+    [CustomEditor(typeof(AssemblyStepManager))]
+    public class SnapFlowEditor : UnityEditor.Editor
     {
+        private static readonly Color SnapFlowBlue = new Color(0.2f, 0.5f, 0.8f);
+        private static readonly Color SnapFlowOrange = new Color(1f, 0.6f, 0.2f);
+
+        private SerializedProperty _stepsProperty;
+        private SerializedProperty _stepCompleteSound;
+        private SerializedProperty _errorSound;
+        private SerializedProperty _highlightMaterial;
+        private SerializedProperty _progressBar;
+        private SerializedProperty _progressText;
+        private SerializedProperty _stepDescriptionText;
+        private SerializedProperty _onAssemblyCompleted; 
+
+        private ReorderableList _reorderableSteps;
+        private List<bool> _foldoutStates = new();
+
+        private bool _showDebugLogs ;
+        private bool _showGizmos ;
+
+        private void OnEnable()
+        {
       
-        stepsProperty = serializedObject.FindProperty("steps");
-        stepCompleteSound = serializedObject.FindProperty("stepCompleteSound");
-        HighlightMaterial = serializedObject.FindProperty("HighlightMaterial");
-        errorSound = serializedObject.FindProperty("errorSound");
-        progressBar = serializedObject.FindProperty("progressBar");
-        progressText = serializedObject.FindProperty("progressText");
-        stepDescriptionText = serializedObject.FindProperty("stepDescriptionText");
+            _stepsProperty = serializedObject.FindProperty("steps");
+            _stepCompleteSound = serializedObject.FindProperty("stepCompleteSound");
+            _highlightMaterial = serializedObject.FindProperty("HighlightMaterial");
+            _errorSound = serializedObject.FindProperty("errorSound");
+            _progressBar = serializedObject.FindProperty("progressBar");
+            _progressText = serializedObject.FindProperty("progressText");
+            _stepDescriptionText = serializedObject.FindProperty("stepDescriptionText");
+            _onAssemblyCompleted = serializedObject.FindProperty("onAssemblyComplete");
 
-        reorderableSteps = new ReorderableList(serializedObject, stepsProperty, true, true, false, true);
-        reorderableSteps.drawHeaderCallback = rect =>
-        {
+            _reorderableSteps = new ReorderableList(serializedObject, _stepsProperty, true, true, false, true);
+            _reorderableSteps.drawHeaderCallback = rect =>
+            {
             
-            EditorGUI.LabelField(rect, "Assembly Steps", EditorStyles.boldLabel);
+                EditorGUI.LabelField(rect, "Assembly Steps", EditorStyles.boldLabel);
             
 
-            Rect clearButtonRect = new Rect(rect.xMax - 200, rect.y, 90, EditorGUIUtility.singleLineHeight);
-            Rect autoDescButtonRect = new Rect(rect.xMax - 100, rect.y, 90, EditorGUIUtility.singleLineHeight);
+                Rect clearButtonRect = new Rect(rect.xMax - 200, rect.y, 90, EditorGUIUtility.singleLineHeight);
+                Rect autoDescButtonRect = new Rect(rect.xMax - 100, rect.y, 90, EditorGUIUtility.singleLineHeight);
 
-            if (GUI.Button(clearButtonRect, "Reset"))
-            {
-                if (EditorUtility.DisplayDialog("Confirm Clear", "Are you sure you want to remove all steps?", "Confirm", "Cancel"))
+                if (GUI.Button(clearButtonRect, "Reset"))
                 {
-                    stepsProperty.ClearArray();
-                    foldoutStates.Clear();
-                    Log("Steps cleared.");
+                    if (EditorUtility.DisplayDialog("Confirm Clearing All Steps", "Are you sure you want to remove all steps?", "Remove", "Cancel"))
+                    {
+                        _stepsProperty.ClearArray();
+                        _foldoutStates.Clear();
+                        Log("Steps cleared.");
+                    }
                 }
-            }
 
-            if (GUI.Button(autoDescButtonRect, "Auto-Desc"))
-            {
-                for (int i = 0; i < stepsProperty.arraySize; i++)
+                if (GUI.Button(autoDescButtonRect, "Auto-Desc"))
                 {
-                    var step = stepsProperty.GetArrayElementAtIndex(i);
-                    var grabObj = step.FindPropertyRelative("objectToGrab").objectReferenceValue;
-                    var snapZone = step.FindPropertyRelative("targetSnapZone").objectReferenceValue;
-                    var desc = step.FindPropertyRelative("StepDescription");
+                    for (int i = 0; i < _stepsProperty.arraySize; i++)
+                    {
+                        var step = _stepsProperty.GetArrayElementAtIndex(i);
+                        var grabObj = step.FindPropertyRelative("objectToGrab").objectReferenceValue;
+                        var snapZone = step.FindPropertyRelative("targetSnapZone").objectReferenceValue;
+                        var desc = step.FindPropertyRelative("StepDescription");
 
-                    string grabName = grabObj ? grabObj.name : "None";
-                    string snapName = snapZone ? snapZone.name : "None";
-                    desc.stringValue = $"Place {grabName} in {snapName}";
+                        string grabName = grabObj ? grabObj.name : "None";
+                        string snapName = snapZone ? snapZone.name : "None";
+                        desc.stringValue = $"Place {grabName} in {snapName}";
 
-                    Log($"Auto-desc for Step {i + 1}: {desc.stringValue}");
+                        Log($"Auto-desc for Step {i + 1}: {desc.stringValue}");
+                    }
                 }
-            }
-        };
+            };
 
-        reorderableSteps.drawElementCallback = (rect, index, isActive, isFocused) =>
-        {
-            SyncFoldoutList();
-            var step = stepsProperty.GetArrayElementAtIndex(index);
-            var grabObject = step.FindPropertyRelative("objectToGrab");
-            var snapZone = step.FindPropertyRelative("targetSnapZone");
-
-            string stepName = grabObject.objectReferenceValue ? $"Step {index + 1} : {grabObject.objectReferenceValue.name}" : $"Step {index + 1}";
-
-            float indentOffset = 15f;
-            Rect foldoutRect = new Rect(rect.x + indentOffset, rect.y, rect.width - indentOffset, EditorGUIUtility.singleLineHeight);
-            foldoutStates[index] = EditorGUI.Foldout(foldoutRect, foldoutStates[index], stepName, true);
-
-            if (foldoutStates[index])
+            _reorderableSteps.drawElementCallback = (rect, index, _, _) =>
             {
-                EditorGUI.indentLevel++;
-                float yOffset = rect.y + EditorGUIUtility.singleLineHeight + 4;
-                float fullWidth = rect.width;
-                float fullHeight = rect.height;
-                float lineHeight = EditorGUIUtility.singleLineHeight;
+                SyncFoldoutList();
+                var step = _stepsProperty.GetArrayElementAtIndex(index);
+                var grabObject = step.FindPropertyRelative("objectToGrab");
+                var snapZone = step.FindPropertyRelative("targetSnapZone");
 
-                var grabObj = grabObject.objectReferenceValue;
-                var snapObj = snapZone.objectReferenceValue;
+                string stepName = grabObject.objectReferenceValue ? $"Step {index + 1} : {grabObject.objectReferenceValue.name}" : $"Step {index + 1}";
 
-                if (!grabObj)
+                float indentOffset = 15f;
+                Rect foldoutRect = new Rect(rect.x + indentOffset, rect.y, rect.width - indentOffset, EditorGUIUtility.singleLineHeight);
+                _foldoutStates[index] = EditorGUI.Foldout(foldoutRect, _foldoutStates[index], stepName, true);
+
+                if (_foldoutStates[index])
                 {
-                    EditorGUI.HelpBox(new Rect(rect.x, yOffset, fullWidth, lineHeight + 5), "Missing: Object to Grab", MessageType.Warning);
+                    EditorGUI.indentLevel++;
+                    float yOffset = rect.y + EditorGUIUtility.singleLineHeight + 4;
+                    float fullWidth = rect.width;
+                    float lineHeight = EditorGUIUtility.singleLineHeight;
+
+                    var grabObj = grabObject.objectReferenceValue;
+                    var snapObj = snapZone.objectReferenceValue;
+
+                    if (!grabObj)
+                    {
+                        EditorGUI.HelpBox(new Rect(rect.x, yOffset, fullWidth, lineHeight + 5), "Missing: Object to Grab", MessageType.Warning);
+                        yOffset += lineHeight + 10;
+                    }
+
+                    if (!snapObj)
+                    {
+                        EditorGUI.HelpBox(new Rect(rect.x, yOffset, fullWidth, lineHeight + 5), "Missing: Snap Zone", MessageType.Warning);
+                        yOffset += lineHeight + 15;
+                    }
+
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight), grabObject, new GUIContent("Object to Grab"));
                     yOffset += lineHeight + 10;
+
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight), snapZone, new GUIContent("Snap Zone"));
+                    yOffset += lineHeight + 10;
+
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight*5),
+                        step.FindPropertyRelative("StepDescription"), new GUIContent("Step Description"));
+                    yOffset += lineHeight * 6;
+
+                    var grabEvents = step.FindPropertyRelative("onGrabEvents");
+                    float grabHeight = EditorGUI.GetPropertyHeight(grabEvents, true);
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, grabHeight), grabEvents, new GUIContent("Grab Events"), true);
+                    yOffset += grabHeight + 4;
+
+                    var snapEvents = step.FindPropertyRelative("onSnapEvents");
+                    float snapHeight = EditorGUI.GetPropertyHeight(snapEvents, true);
+                    EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, snapHeight), snapEvents, new GUIContent("Snap Events"), true);
+                   
+
+                    EditorGUI.indentLevel--;
                 }
-
-                if (!snapObj)
-                {
-                    EditorGUI.HelpBox(new Rect(rect.x, yOffset, fullWidth, lineHeight + 5), "Missing: Snap Zone", MessageType.Warning);
-                    yOffset += lineHeight + 15;
-                }
-
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight), grabObject, new GUIContent("Object to Grab"));
-                yOffset += lineHeight + 10;
-
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight), snapZone, new GUIContent("Snap Zone"));
-                yOffset += lineHeight + 10;
-
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, lineHeight*5),
-                    step.FindPropertyRelative("StepDescription"), new GUIContent("Step Description"));
-                yOffset += lineHeight * 6;
-
-                var grabEvents = step.FindPropertyRelative("onGrabEvents");
-                float grabHeight = EditorGUI.GetPropertyHeight(grabEvents, true);
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, grabHeight), grabEvents, new GUIContent("Grab Events"), true);
-                yOffset += grabHeight + 4;
-
-                var snapEvents = step.FindPropertyRelative("onSnapEvents");
-                float snapHeight = EditorGUI.GetPropertyHeight(snapEvents, true);
-                EditorGUI.PropertyField(new Rect(rect.x, yOffset, fullWidth, snapHeight), snapEvents, new GUIContent("Snap Events"), true);
-                yOffset += snapHeight + 10;
-
-                EditorGUI.indentLevel--;
-            }
-        };
+            };
         
         
-        reorderableSteps.elementHeightCallback = index =>
-        {
-            SyncFoldoutList();
-            if (!foldoutStates[index]) return EditorGUIUtility.singleLineHeight + 10;
-
-            var step = stepsProperty.GetArrayElementAtIndex(index);
-            float height = EditorGUIUtility.singleLineHeight * 4 + 30;
-
-            height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("onGrabEvents"), true) + 10;
-            height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("onSnapEvents"), true) + 10;
-            height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("StepDescription"), true) + 10;
-
-            var grabGO = step.FindPropertyRelative("objectToGrab").objectReferenceValue;
-            var snapGO = step.FindPropertyRelative("targetSnapZone").objectReferenceValue;
-
-            if (!grabGO) height += EditorGUIUtility.singleLineHeight + 15;
-            if (!snapGO) height += EditorGUIUtility.singleLineHeight + 25;
-            
-            height += (EditorGUIUtility.singleLineHeight) * 3;
-
-            return height;
-        };
-    }
-
-    private void SyncFoldoutList()
-    {
-        while (foldoutStates.Count < stepsProperty.arraySize) foldoutStates.Add(true);
-        while (foldoutStates.Count > stepsProperty.arraySize) foldoutStates.RemoveAt(foldoutStates.Count - 1);
-    }
-
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
-        DrawHeader();
-        DrawGeneralSettings();
-        DrawReorderableSteps();
-        DrawFooter();
-        serializedObject.ApplyModifiedProperties();
-    }
-
-    private new static void DrawHeader()
-    {
-        GUILayout.Space(10);
-        GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 24,
-            alignment = TextAnchor.MiddleCenter,
-            fontStyle = FontStyle.Bold,
-            
-            
-            normal = { textColor = SnapFlowBlue}
-        };
-
-        GUIStyle taglinestyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.MiddleCenter,
-            fontStyle = FontStyle.Bold
-        };
-        GUILayout.Label("SNAP FLOW", titleStyle);
-        GUILayout.Label("Assembly Editor", taglinestyle);
-        GUILayout.Space(10);
-    }
-
-    private void DrawGeneralSettings()
-    {
-      
-        EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Sound Clips",EditorStyles.whiteLabel);
-        EditorGUILayout.PropertyField(stepCompleteSound, new GUIContent("Success Soundclip"));
-        EditorGUILayout.PropertyField(errorSound, new GUIContent("Error Soundclip"));
-        EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("Highlights and Description",EditorStyles.whiteLabel);
-        EditorGUILayout.PropertyField(HighlightMaterial, new GUIContent("Highlight Material"));
-        EditorGUILayout.PropertyField(stepDescriptionText, new GUIContent("Step Description Text"));
-        EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
-        EditorGUILayout.PropertyField(progressBar, new GUIContent("Progress Bar"));
-        EditorGUILayout.PropertyField(progressText, new GUIContent("Progress Text"));
-        GUILayout.Space(20);
-        EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
-        showDebugLogs = EditorGUILayout.Toggle("Enable Debug Logs", showDebugLogs);
-        showGizmos = EditorGUILayout.Toggle("Visualize Gizmos", showGizmos);
-        SnapFlowEditorGizmos.ShowGizmos = showGizmos;
-
-        GUILayout.Space(10);
-    }
-
-    private void DrawReorderableSteps()
-    {
-        if (stepsProperty == null)
-        {
-            EditorGUILayout.HelpBox("Steps property not found.", MessageType.Warning);
-            return;
-        }
-
-        reorderableSteps.DoLayoutList();
-    }
-
-    private void DrawFooter()
-    {
-        GUILayout.Space(10);
-        GUI.backgroundColor = SnapFlowOrange;
-        if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
-        {
-            stepsProperty.arraySize++;
-            foldoutStates.Add(true);
-            Log("New step added.");
-        }
-        GUI.backgroundColor = Color.white;
-    }
-
-    private void Log(string message)
-    {
-        if (showDebugLogs)
-        {
-            Debug.Log("[SnapFlow Editor] " + message);
-        }
-    }
-}
-
-[InitializeOnLoad]
-public static class SnapFlowEditorGizmos
-{
-    public static bool ShowGizmos = true;
-
-    static SnapFlowEditorGizmos()
-    {
-        SceneView.duringSceneGui += OnSceneGUI;
-    }
-
-    private static void OnSceneGUI(SceneView sceneView)
-    {
-        if (!ShowGizmos) return;
-
-        foreach (var manager in GameObject.FindObjectsOfType<AssemblyStepManager>())
-        {
-            var steps = manager.steps;
-            if (steps == null || steps.Count == 0) return;
-            
-
-            for (int i = 0; i < steps.Count; i++)
+            _reorderableSteps.elementHeightCallback = index =>
             {
-                var step = steps[i];
-                var fromObj = step.objectToGrab;
-                var toSnap = step.targetSnapZone;
+                SyncFoldoutList();
+                if (!_foldoutStates[index]) return EditorGUIUtility.singleLineHeight + 10;
 
-                if (fromObj == null || toSnap == null)
-                    continue;
+                var step = _stepsProperty.GetArrayElementAtIndex(index);
+                float height = EditorGUIUtility.singleLineHeight * 4 + 30;
 
-                Vector3 fromPos = fromObj.transform.position;
-                Vector3 toPos = toSnap.transform.position;
-                Vector3 midPoint = (fromPos + toPos) / 2f + Vector3.up * 0.2f;
+                height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("onGrabEvents"), true) + 10;
+                height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("onSnapEvents"), true) + 10;
+                height += EditorGUI.GetPropertyHeight(step.FindPropertyRelative("StepDescription"), true) + 10;
 
-                Handles.color = Color.cyan;
-                Handles.DrawLine(fromPos, toPos, 2f);
+                var grabGo = step.FindPropertyRelative("objectToGrab").objectReferenceValue;
+                var snapGo = step.FindPropertyRelative("targetSnapZone").objectReferenceValue;
 
-                GUIStyle labelStyle = new GUIStyle(EditorStyles.boldLabel)
+                if (!grabGo) height += EditorGUIUtility.singleLineHeight + 15;
+                if (!snapGo) height += EditorGUIUtility.singleLineHeight + 25;
+            
+                height += (EditorGUIUtility.singleLineHeight) * 3;
+
+                return height;
+            };
+        }
+
+        private void SyncFoldoutList()
+        {
+            while (_foldoutStates.Count < _stepsProperty.arraySize) _foldoutStates.Add(true);
+            while (_foldoutStates.Count > _stepsProperty.arraySize) _foldoutStates.RemoveAt(_foldoutStates.Count - 1);
+        }
+
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+            DrawHeader();
+            DrawGeneralSettings();
+            DrawReorderableSteps();
+            DrawFooter();
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private new static void DrawHeader()
+        {
+            GUILayout.Space(10);
+            GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 24,
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Bold,
+            
+            
+                normal = { textColor = SnapFlowBlue}
+            };
+
+            GUIStyle taglinestyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Bold
+            };
+            GUILayout.Label("SNAP FLOW", titleStyle);
+            GUILayout.Label("Assembly Editor", taglinestyle);
+            GUILayout.Space(10);
+        }
+
+        private void DrawGeneralSettings()
+        {
+      
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Sound Clips",EditorStyles.whiteLabel);
+            EditorGUILayout.PropertyField(_stepCompleteSound, new GUIContent("Success Soundclip"));
+            EditorGUILayout.PropertyField(_errorSound, new GUIContent("Error Soundclip"));
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Highlights and Description",EditorStyles.whiteLabel);
+            EditorGUILayout.PropertyField(_highlightMaterial, new GUIContent("Highlight Material"));
+            EditorGUILayout.PropertyField(_stepDescriptionText, new GUIContent("Step Description Text"));
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
+            EditorGUILayout.PropertyField(_progressBar, new GUIContent("Progress Bar"));
+            EditorGUILayout.PropertyField(_progressText, new GUIContent("Progress Text"));
+            GUILayout.Space(20);
+            EditorGUILayout.LabelField("Assembly Event",EditorStyles.whiteLabel);
+            EditorGUILayout.PropertyField(_onAssemblyCompleted, new GUIContent("On-Assembly Complete"));
+            EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
+            _showDebugLogs = EditorGUILayout.Toggle("Enable Debug Logs", _showDebugLogs);
+            _showGizmos = EditorGUILayout.Toggle("Visualize Gizmos", _showGizmos);
+            SnapFlowEditorGizmos.ShowGizmos = _showGizmos;
+
+            GUILayout.Space(10);
+        }
+
+        private void DrawReorderableSteps()
+        {
+            if (_stepsProperty == null)
+            {
+                EditorGUILayout.HelpBox("Steps property not found.", MessageType.Warning);
+                return;
+            }
+
+            _reorderableSteps.DoLayoutList();
+        }
+
+        private void DrawFooter()
+        {
+            GUILayout.Space(10);
+            GUI.backgroundColor = SnapFlowOrange;
+            if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
+            {
+                _stepsProperty.arraySize++;
+                _foldoutStates.Add(true);
+                Log("New step added.");
+            }
+            GUI.backgroundColor = Color.white;
+        }
+
+        private void Log(string message)
+        {
+            if (_showDebugLogs)
+            {
+                Debug.Log("[SnapFlow Editor] " + message);
+            }
+        }
+    }
+
+    [InitializeOnLoad]
+    public static class SnapFlowEditorGizmos
+    {
+        public static bool ShowGizmos = true;
+
+        [Obsolete("Obsolete")]
+        static SnapFlowEditorGizmos()
+        {
+            SceneView.duringSceneGui += OnSceneGUI;
+        }
+
+        [Obsolete("Obsolete")]
+        private static void OnSceneGUI(SceneView sceneView)
+        {
+            if (!ShowGizmos) return;
+
+            foreach (var manager in Object.FindObjectsOfType<AssemblyStepManager>())
+            {
+                var steps = manager.steps;
+                if (steps == null || steps.Count == 0) return;
+            
+            
+
+                for (int i = 0; i < steps.Count; i++)
                 {
-                    normal = { textColor = Color.white },
-                    fontSize = 12,
-                    alignment = TextAnchor.MiddleCenter,
-                };
-                Handles.Label(midPoint, $"Step {i + 1}", labelStyle);
+                    var step = steps[i];
+                    var fromObj = step.objectToGrab;
+                    var toSnap = step.targetSnapZone;
 
-                Material highlightMat = manager.HighlightMaterial;
-                if (highlightMat != null)
-                {
-                    var matColor = highlightMat.color;
-                    matColor.a = 0.3f;
-                    Handles.color = matColor;
+                    if (fromObj == null || toSnap == null)
+                        continue;
 
-                    if (fromObj.TryGetComponent<Renderer>(out var fromRend))
+                    Vector3 fromPos = fromObj.transform.position;
+                    Vector3 toPos = toSnap.transform.position;
+                    Vector3 midPoint = (fromPos + toPos) / 2f + Vector3.up * 0.2f;
+
+                    Handles.color = Color.cyan;
+                    Handles.DrawLine(fromPos, toPos, 2f);
+
+                    GUIStyle labelStyle = new GUIStyle(EditorStyles.boldLabel)
                     {
-                        Handles.DrawWireCube(fromRend.bounds.center, fromRend.bounds.size);
-                    }
+                        normal = { textColor = Color.white },
+                        fontSize = 12,
+                        alignment = TextAnchor.MiddleCenter,
+                    };
+                    Handles.Label(midPoint, $"Step {i + 1}", labelStyle);
 
-                    if (toSnap.TryGetComponent<Collider>(out var toCol))
+                    Material highlightMat = manager.HighlightMaterial;
+                    if (highlightMat != null)
                     {
-                        Handles.DrawWireCube(toCol.bounds.center, toCol.bounds.size);
+                        var matColor = highlightMat.color;
+                        matColor.a = 0.3f;
+                        Handles.color = matColor;
+
+                        if (fromObj.TryGetComponent<Renderer>(out var fromRend))
+                        {
+                            Handles.DrawWireCube(fromRend.bounds.center, fromRend.bounds.size);
+                        }
+
+                        if (toSnap.TryGetComponent<Collider>(out var toCol))
+                        {
+                            Handles.DrawWireCube(toCol.bounds.center, toCol.bounds.size);
+                        }
                     }
                 }
+            
+                manager.gameObject.name = "Snap Flow - Assembly";
+            
             }
-            
-            manager.gameObject.name = "Snap Flow - Assembly";
-            
         }
     }
 }
