@@ -120,83 +120,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &158808838
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 158808840}
-  - component: {fileID: 158808841}
-  m_Layer: 0
-  m_Name: Snap Flow - Assembly
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &158808840
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 158808838}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.35037065, y: 0.47133264, z: -1.5133487}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &158808841
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 158808838}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f24ab61e0d4ee4b3b89bd0d995d9d8d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentMode: 0
-  steps:
-  - objectToGrab: {fileID: 3423172599470233350}
-    targetSnapZone: {fileID: 0}
-    StepDescription: 
-    onGrabEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    onSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    initialPosition: {x: 0, y: 0, z: 0}
-    initialRotation: {x: 0, y: 0, z: 0, w: 0}
-  - objectToGrab: {fileID: 0}
-    targetSnapZone: {fileID: 0}
-    StepDescription: 
-    onGrabEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    onSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    initialPosition: {x: 0, y: 0, z: 0}
-    initialRotation: {x: 0, y: 0, z: 0, w: 0}
-  stepCompleteSound: {fileID: 0}
-  errorSound: {fileID: 0}
-  HighlightMaterial: {fileID: 0}
-  progressBar: {fileID: 0}
-  progressText: {fileID: 0}
-  stepDescriptionText: {fileID: 0}
-  onAssemblyComplete:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &172472817
 GameObject:
   m_ObjectHideFlags: 0
@@ -781,7 +704,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 624049582}
   m_CullTransparentMesh: 1
---- !u!1 &970881953
+--- !u!1 &1020939214
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -789,8 +712,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 970881955}
-  - component: {fileID: 970881954}
+  - component: {fileID: 1020939216}
+  - component: {fileID: 1020939217}
   m_Layer: 0
   m_Name: Snap Flow - Assembly
   m_TagString: Untagged
@@ -798,55 +721,46 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &970881954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970881953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f24ab61e0d4ee4b3b89bd0d995d9d8d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentMode: 0
-  steps:
-  - objectToGrab: {fileID: 3423172599470233350}
-    targetSnapZone: {fileID: 7342997411227174221}
-    StepDescription: 
-    onGrabEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    onSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    initialPosition: {x: 0, y: 0, z: 0}
-    initialRotation: {x: 0, y: 0, z: 0, w: 0}
-  stepCompleteSound: {fileID: 8300000, guid: 29164d686358d9540be161a7b3df01d0, type: 3}
-  errorSound: {fileID: 0}
-  HighlightMaterial: {fileID: 0}
-  progressBar: {fileID: 0}
-  progressText: {fileID: 0}
-  stepDescriptionText: {fileID: 0}
-  onAssemblyComplete:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!4 &970881955
+--- !u!4 &1020939216
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970881953}
+  m_GameObject: {fileID: 1020939214}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.18001175, y: 0.79481757, z: -0.633634}
+  m_LocalPosition: {x: -1.6680161, y: -1.1078247, z: -0.46914488}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1020939217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1020939214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e88caabf7b0e4afdaff6cbc8ded314a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  steps: []
+  stepCompleteSound: {fileID: 0}
+  highlightMaterial: {fileID: 0}
+  progressBar: {fileID: 0}
+  progressText: {fileID: 0}
+  stepDescriptionText: {fileID: 0}
+  onDisassemblyComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  _currentStep: 0
+  showDebug: 0
+  Showgizmos: 0
+  EnableDEvent: 0
 --- !u!1001 &1052892058
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3294,5 +3208,4 @@ SceneRoots:
   - {fileID: 8846933470577416880}
   - {fileID: 1358585332625252932}
   - {fileID: 1251988475}
-  - {fileID: 158808840}
-  - {fileID: 970881955}
+  - {fileID: 1020939216}

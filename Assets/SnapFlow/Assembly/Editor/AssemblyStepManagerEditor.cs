@@ -20,13 +20,17 @@ namespace SnapFlow.Assembly.Editor
         private SerializedProperty _progressBar;
         private SerializedProperty _progressText;
         private SerializedProperty _stepDescriptionText;
-        private SerializedProperty _onAssemblyCompleted; 
+        private SerializedProperty _onAssemblyCompleted;
+      
+      
+        
 
         private ReorderableList _reorderableSteps;
         private List<bool> _foldoutStates = new();
 
-        private bool _showDebugLogs ;
-        private bool _showGizmos ;
+        private SerializedProperty _showDebugLogs ;
+        private SerializedProperty _showGizmos ;
+        private SerializedProperty _assemblyEvents;
 
         private void OnEnable()
         {
@@ -39,6 +43,9 @@ namespace SnapFlow.Assembly.Editor
             _progressText = serializedObject.FindProperty("progressText");
             _stepDescriptionText = serializedObject.FindProperty("stepDescriptionText");
             _onAssemblyCompleted = serializedObject.FindProperty("onAssemblyComplete");
+            _showGizmos = serializedObject.FindProperty("showgizmos");
+            _showDebugLogs = serializedObject.FindProperty("debuglog");
+            _assemblyEvents = serializedObject.FindProperty("AssemblyEvents");
 
             _reorderableSteps = new ReorderableList(serializedObject, _stepsProperty, true, true, false, true);
             _reorderableSteps.drawHeaderCallback = rect =>
@@ -217,13 +224,17 @@ namespace SnapFlow.Assembly.Editor
             EditorGUILayout.PropertyField(_progressBar, new GUIContent("Progress Bar"));
             EditorGUILayout.PropertyField(_progressText, new GUIContent("Progress Text"));
             GUILayout.Space(20);
-            EditorGUILayout.LabelField("Assembly Event",EditorStyles.whiteLabel);
-            EditorGUILayout.PropertyField(_onAssemblyCompleted, new GUIContent("On-Assembly Complete"));
             EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
-            _showDebugLogs = EditorGUILayout.Toggle("Enable Debug Logs", _showDebugLogs);
-            _showGizmos = EditorGUILayout.Toggle("Visualize Gizmos", _showGizmos);
-            SnapFlowEditorGizmos.ShowGizmos = _showGizmos;
-
+            EditorGUILayout.PropertyField(_showDebugLogs, new GUIContent("Debug Logs"));
+            EditorGUILayout.PropertyField(_showGizmos, new GUIContent("Show Gizmos"));
+            SnapFlowEditorGizmos.ShowGizmos = _showGizmos.boolValue;
+            EditorGUILayout.PropertyField(_assemblyEvents, new GUIContent("Assembly Events"));
+            GUILayout.Space(10);
+            if (_assemblyEvents.boolValue)
+            {
+                EditorGUILayout.LabelField("Assembly Event",EditorStyles.whiteLabel);
+                EditorGUILayout.PropertyField(_onAssemblyCompleted, new GUIContent("On-Assembly Complete"));
+            }
             GUILayout.Space(10);
         }
 
@@ -253,7 +264,7 @@ namespace SnapFlow.Assembly.Editor
 
         private void Log(string message)
         {
-            if (_showDebugLogs)
+            if (_showDebugLogs.boolValue)
             {
                 Debug.Log("[SnapFlow Editor] " + message);
             }

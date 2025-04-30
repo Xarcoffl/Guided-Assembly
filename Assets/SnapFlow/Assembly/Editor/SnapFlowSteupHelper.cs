@@ -3,19 +3,23 @@ using UnityEngine;
 using BNG;
 using System.Linq;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using SnapFlow.Disassembly;
 
 [CustomEditor(typeof(GameObject))]
 public class SnapFlowSetupHelper : Editor
 {
-    private AssemblyStepManager assemblyManager;
-    private int selectedStepIndex = 0;
-    private AssignmentType assignType = AssignmentType.ObjectToGrab;
-    private List<string> stepLabels = new();
-    private List<AssemblyStepManager.AssemblyStep> steps;
-    private Vector2 scrollPos;
+    private enum ManagerType { Assembly, Disassembly }
+    private enum AssignmentType { ObjectToGrab, TargetSnapZone, objectToRemove, sourceSnapZone }
 
-    private enum AssignmentType { ObjectToGrab, TargetSnapZone }
+    private ManagerType selectedManagerType = ManagerType.Assembly;
+    private AssignmentType assignType = AssignmentType.ObjectToGrab;
+
+    private AssemblyStepManager assemblyManager;
+    private DisassemblyManager disassemblyManager;
+
+    private int selectedStepIndex = 0;
+    private List<string> stepLabels = new();
+    private Vector2 scrollPos;
 
     public override void OnInspectorGUI()
     {
@@ -51,7 +55,7 @@ public class SnapFlowSetupHelper : Editor
                     Undo.AddComponent<BoxCollider>(go);
                     Undo.AddComponent<Rigidbody>(go);
                     Undo.AddComponent<GrabbableUnityEvents>(go);
-                    
+
                     var g = go.GetComponent<Grabbable>();
                     g.GrabButton = GrabButton.Grip;
                     g.Grabtype = HoldType.HoldDown;
@@ -71,68 +75,104 @@ public class SnapFlowSetupHelper : Editor
             }
         }
 
-        if (grabevent == null)
+        if (grabevent == null && snap == null)
         {
-            if (snap == null)
+            if (GUILayout.Button("Setup SnapZone"))
             {
-                if (GUILayout.Button("Setup SnapZone"))
-                {
-                    Undo.AddComponent<SnapZone>(go);
-                    if (go.GetComponent<Grabbable>() == null) Undo.AddComponent<Grabbable>(go);
-                    if (go.GetComponent<BoxCollider>() == null) Undo.AddComponent<BoxCollider>(go);
-                    if (go.GetComponent<Rigidbody>() == null) Undo.AddComponent<Rigidbody>(go);
-                    Undo.AddComponent<GrabbablesInTrigger>(go);
-                    Undo.AddComponent<GrabAction>(go);
+                Undo.AddComponent<SnapZone>(go);
+                if (!go.GetComponent<Grabbable>()) Undo.AddComponent<Grabbable>(go);
+                if (!go.GetComponent<BoxCollider>()) Undo.AddComponent<BoxCollider>(go);
+                if (!go.GetComponent<Rigidbody>()) Undo.AddComponent<Rigidbody>(go);
+                Undo.AddComponent<GrabbablesInTrigger>(go);
+                Undo.AddComponent<GrabAction>(go);
 
-                    var col = go.GetComponent<BoxCollider>();
-                    col.isTrigger = true;
+                var col = go.GetComponent<BoxCollider>();
+                col.isTrigger = true;
 
-                    var g = go.GetComponent<Grabbable>();
-                    g.GrabButton = GrabButton.Grip;
-                    g.Grabtype = HoldType.HoldDown;
-                    g.GrabMechanic = GrabType.Snap;
-                    g.GrabPhysics = GrabPhysics.FixedJoint;
+                var g = go.GetComponent<Grabbable>();
+                g.GrabButton = GrabButton.Grip;
+                g.Grabtype = HoldType.HoldDown;
+                g.GrabMechanic = GrabType.Snap;
+                g.GrabPhysics = GrabPhysics.FixedJoint;
 
-                    go.GetComponent<Rigidbody>().isKinematic = true;
-                }
+                go.GetComponent<Rigidbody>().isKinematic = true;
             }
-            else
+        }
+        else if (snap != null)
+        {
+            if (GUILayout.Button("Remove SnapZone Setup"))
             {
-                if (GUILayout.Button("Remove SnapZone Setup"))
-                {
-                    Undo.DestroyObjectImmediate(go.GetComponent<SnapZone>());
-                    if (go.GetComponent<GrabbablesInTrigger>()) Undo.DestroyObjectImmediate(go.GetComponent<GrabbablesInTrigger>());
-                    if (go.GetComponent<GrabAction>()) Undo.DestroyObjectImmediate(go.GetComponent<GrabAction>());
-                    Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
-                    if (go.GetComponent<Rigidbody>()) Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
-                    if (go.GetComponent<BoxCollider>()) Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
-                }
+                Undo.DestroyObjectImmediate(go.GetComponent<SnapZone>());
+                if (go.GetComponent<GrabbablesInTrigger>()) Undo.DestroyObjectImmediate(go.GetComponent<GrabbablesInTrigger>());
+                if (go.GetComponent<GrabAction>()) Undo.DestroyObjectImmediate(go.GetComponent<GrabAction>());
+                if (go.GetComponent<Grabbable>()) Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
+                if (go.GetComponent<Rigidbody>()) Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
+                if (go.GetComponent<BoxCollider>()) Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
             }
         }
     }
 
     private void DrawManagerSelection(GameObject go)
     {
-        var managers = FindObjectsOfType<AssemblyStepManager>();
-        if (managers.Length == 0)
+        var assemblyManagers = FindObjectsOfType<AssemblyStepManager>();
+        var disassemblyManagers = FindObjectsOfType<DisassemblyManager>();
+
+        if (assemblyManagers.Length == 0 && disassemblyManagers.Length == 0)
         {
-            EditorGUILayout.HelpBox("No AssemblyStepManager found in scene.", MessageType.Warning);
+            EditorGUILayout.HelpBox("No SnapFlow Managers found in scene.", MessageType.Warning);
             return;
         }
 
-        string[] managerNames = managers.Select(m => m.name).ToArray();
-        int currentManagerIndex = assemblyManager != null ? managers.ToList().IndexOf(assemblyManager) : 0;
-        int newManagerIndex = EditorGUILayout.Popup("Assembly Manager", currentManagerIndex, managerNames);
+        // Manager type toggle
+        selectedManagerType = (ManagerType)EditorGUILayout.EnumPopup("Manager Type", selectedManagerType);
 
-        if (assemblyManager != managers[newManagerIndex])
+        if (selectedManagerType == ManagerType.Assembly)
         {
-            assemblyManager = managers[newManagerIndex];
-            RefreshStepList();
+            if (assemblyManagers.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No Assembly Managers found.", MessageType.Info);
+                return;
+            }
+
+            string[] managerNames = assemblyManagers.Select(m => m.name).ToArray();
+            int currentIndex = assemblyManager != null ? assemblyManagers.ToList().IndexOf(assemblyManager) : 0;
+            int newIndex = EditorGUILayout.Popup("Assembly Manager", currentIndex, managerNames);
+
+            if (assemblyManager != assemblyManagers[newIndex])
+            {
+                assemblyManager = assemblyManagers[newIndex];
+                RefreshAssemblySteps();
+            }
+
+            DrawStepAssignmentUI(go, assemblyManager?.steps?.Count ?? 0);
         }
-
-        if (steps == null || steps.Count == 0)
+        else
         {
-            EditorGUILayout.HelpBox("No steps defined in selected Assembly Manager.", MessageType.Info);
+            if (disassemblyManagers.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No Disassembly Managers found.", MessageType.Info);
+                return;
+            }
+
+            string[] managerNames = disassemblyManagers.Select(m => m.name).ToArray();
+            int currentIndex = disassemblyManager != null ? disassemblyManagers.ToList().IndexOf(disassemblyManager) : 0;
+            int newIndex = EditorGUILayout.Popup("Disassembly Manager", currentIndex, managerNames);
+
+            if (disassemblyManager != disassemblyManagers[newIndex])
+            {
+                disassemblyManager = disassemblyManagers[newIndex];
+                RefreshDisassemblySteps();
+            }
+
+            DrawStepAssignmentUI(go, disassemblyManager?.steps?.Count ?? 0);
+        }
+    }
+
+    private void DrawStepAssignmentUI(GameObject go, int stepCount)
+    {
+        if (stepCount == 0)
+        {
+            EditorGUILayout.HelpBox("No steps defined in selected manager.", MessageType.Info);
             return;
         }
 
@@ -140,7 +180,12 @@ public class SnapFlowSetupHelper : Editor
         EditorGUILayout.LabelField("Step Assignment", EditorStyles.boldLabel);
 
         selectedStepIndex = EditorGUILayout.Popup("Select Step", selectedStepIndex, stepLabels.ToArray());
-        assignType = (AssignmentType)EditorGUILayout.EnumPopup("Assign As", assignType);
+
+        string[] options = selectedManagerType == ManagerType.Assembly
+            ? new[] { "ObjectToGrab", "TargetSnapZone" }
+            : new[] { "objectToRemove", "sourceSnapZone" };
+
+        assignType = (AssignmentType)EditorGUILayout.Popup("Assign As", (int)assignType, options);
 
         if (GUILayout.Button("Assign"))
         {
@@ -150,34 +195,60 @@ public class SnapFlowSetupHelper : Editor
 
     private void AssignSelectedStep(GameObject go)
     {
-        Undo.RecordObject(assemblyManager, "Assign Step Object");
-
-        if (assignType == AssignmentType.ObjectToGrab)
+        if (assignType == AssignmentType.ObjectToGrab && go.GetComponent<Grabbable>() == null)
         {
-            assemblyManager.steps[selectedStepIndex].objectToGrab = go.GetComponent<Grabbable>();
+            Debug.LogWarning("Missing Grabbable component.");
+            return;
+        }
+        if ((assignType == AssignmentType.TargetSnapZone || assignType == AssignmentType.sourceSnapZone) && go.GetComponent<SnapZone>() == null)
+        {
+            Debug.LogWarning("Missing SnapZone component.");
+            return;
+        }
+
+        if (selectedManagerType == ManagerType.Assembly)
+        {
+            Undo.RecordObject(assemblyManager, "Assign Step Object");
+            var step = assemblyManager.steps[selectedStepIndex];
+
+            if (assignType == AssignmentType.ObjectToGrab)
+                step.objectToGrab = go.GetComponent<Grabbable>();
+            else
+                step.targetSnapZone = go.GetComponent<SnapZone>();
+
+            EditorUtility.SetDirty(assemblyManager);
         }
         else
         {
-            assemblyManager.steps[selectedStepIndex].targetSnapZone = go.GetComponent<SnapZone>();
+            Undo.RecordObject(disassemblyManager, "Assign Step Object");
+            var step = disassemblyManager.steps[selectedStepIndex];
+
+            if (assignType == AssignmentType.objectToRemove)
+                step.objectToRemove = go.GetComponent<Grabbable>();
+            else
+                step.sourceSnapZone = go.GetComponent<SnapZone>();
+
+            EditorUtility.SetDirty(disassemblyManager);
         }
 
-        EditorUtility.SetDirty(assemblyManager);
-
-        // Auto-ping the object in the Hierarchy
         EditorGUIUtility.PingObject(go);
-
-        // Focus the object in the Scene view
         if (SceneView.lastActiveSceneView != null)
         {
             SceneView.lastActiveSceneView.Frame(go.GetComponent<Renderer>()?.bounds ?? new Bounds(go.transform.position, Vector3.one), false);
         }
 
-        Debug.Log($"Assigned '{go.name}' to Step {selectedStepIndex + 1} as {assignType}.");
+        Debug.Log($"Assigned '{go.name}' to {selectedManagerType} Step {selectedStepIndex + 1} as {assignType}.");
     }
 
-    private void RefreshStepList()
+    private void RefreshAssemblySteps()
     {
-        steps = assemblyManager.steps;
+        var steps = assemblyManager.steps;
         stepLabels = steps.Select((s, i) => $"Step {i + 1}: {s.StepDescription}").ToList();
+    }
+
+    private void RefreshDisassemblySteps()
+    {
+        var steps = disassemblyManager.steps;
+        stepLabels = steps.Select((s, i) => $"Step {i + 1}: {s.stepDescription}").ToList();
     }
 }

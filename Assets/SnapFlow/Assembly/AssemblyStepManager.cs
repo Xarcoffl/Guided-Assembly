@@ -35,6 +35,11 @@ public class AssemblyStepManager : MonoBehaviour
     public TextMeshProUGUI stepDescriptionText;
     public UnityEvent onAssemblyComplete;
 
+
+    public bool showgizmos = false;
+    public bool debuglog = false;
+    public bool AssemblyEvents = false;
+
     private int _currentStep = 0;
     private HashSet<int> disassembledSteps = new();
 

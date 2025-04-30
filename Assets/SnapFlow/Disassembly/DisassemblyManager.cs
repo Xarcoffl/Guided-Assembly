@@ -37,6 +37,7 @@ namespace SnapFlow.Disassembly
 
         public bool showDebug = false;
         public bool Showgizmos = false;
+        public bool EnableDEvent = false;
 
         private void Start()
         {

@@ -26,6 +26,7 @@ namespace SnapFlow.Disassembly.Editor
 
         private SerializedProperty _showDebugLogs;
         private SerializedProperty _showGizmos;
+        private SerializedProperty _enableDisEvent;
 
         private void OnEnable()
         {
@@ -38,6 +39,7 @@ namespace SnapFlow.Disassembly.Editor
             _onDisassemblyComplete = serializedObject.FindProperty("onDisassemblyComplete");
             _showGizmos = serializedObject.FindProperty("Showgizmos");
             _showDebugLogs = serializedObject.FindProperty("showDebug");
+            _enableDisEvent = serializedObject.FindProperty("EnableDEvent");
             
             
             _reorderableSteps = new ReorderableList(serializedObject, _disassemblyProperty, true, true, false, true);
@@ -212,14 +214,20 @@ namespace SnapFlow.Disassembly.Editor
             EditorGUILayout.Space(15);
             EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_progressBar, new GUIContent("Progress Bar"));
-            EditorGUILayout.PropertyField(_progressText, new GUIContent("Progress Text"));
+            EditorGUILayout.PropertyField(_progressText, new GUIContent("Progress Step Count"));
             GUILayout.Space(20);
-            EditorGUILayout.LabelField("Disassembly Event",EditorStyles.whiteLabel);
-            EditorGUILayout.PropertyField(_onDisassemblyComplete, new GUIContent("On-Disassembly Complete"));
             EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_showDebugLogs, new GUIContent("Debug Logs"));
             EditorGUILayout.PropertyField(_showGizmos, new GUIContent("Show Gizmos"));
+            EditorGUILayout.PropertyField(_enableDisEvent, new GUIContent("Disassembly Events"));
             SnapFlowDEditorGizmos.ShowGizmos = _showGizmos.boolValue;
+            GUILayout.Space(10);
+            if (_enableDisEvent.boolValue)
+            {
+                
+                EditorGUILayout.LabelField("Disassembly Event",EditorStyles.whiteLabel);
+                EditorGUILayout.PropertyField(_onDisassemblyComplete, new GUIContent("On-Disassembly Complete"));
+            }
             GUILayout.Space(40);
         }
         
