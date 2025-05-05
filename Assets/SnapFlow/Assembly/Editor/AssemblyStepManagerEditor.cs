@@ -203,7 +203,7 @@ namespace SnapFlow.Assembly.Editor
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold
             };
-            GUILayout.Label("SNAP FLOW", titleStyle);
+            GUILayout.Button("SNAP FLOW", titleStyle);
             GUILayout.Label("Assembly Editor", taglinestyle);
             GUILayout.Space(10);
         }
@@ -255,6 +255,12 @@ namespace SnapFlow.Assembly.Editor
             GUI.backgroundColor = SnapFlowOrange;
             if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
             {
+                foreach (var manager in Object.FindObjectsOfType<AssemblyStepManager>())
+                {
+                    manager.name = "Snap Flow - Assembly";
+                    break;
+                }
+              
                 _stepsProperty.arraySize++;
                 _foldoutStates.Add(true);
                 Log("New step added.");
@@ -337,7 +343,7 @@ namespace SnapFlow.Assembly.Editor
                     }
                 }
             
-                manager.gameObject.name = "Snap Flow - Assembly";
+                
             
             }
         }

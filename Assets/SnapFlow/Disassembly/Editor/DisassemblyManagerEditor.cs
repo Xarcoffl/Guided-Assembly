@@ -238,7 +238,6 @@ namespace SnapFlow.Disassembly.Editor
                 EditorGUILayout.HelpBox("Steps property not found.", MessageType.Warning);
                 return;
             }
-
             _reorderableSteps.DoLayoutList();
         }
         
@@ -248,6 +247,11 @@ namespace SnapFlow.Disassembly.Editor
             GUI.backgroundColor = SnapFlowOrange;
             if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
             {
+                foreach (var manager in Object.FindObjectsOfType<DisassemblyManager>())
+                {
+                    manager.name = "Snap Flow - Disassembly";
+                    break;
+                }
                 _disassemblyProperty.arraySize++;
                 _foldoutStates.Add(true);
                 Log("New step added.");
@@ -331,7 +335,7 @@ namespace SnapFlow.Disassembly.Editor
                     }
                 }
             
-                manager.gameObject.name = "Snap Flow - Disassembly";
+                
             
             }
         }

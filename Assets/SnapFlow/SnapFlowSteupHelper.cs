@@ -24,10 +24,15 @@ public class SnapFlowSetupHelper : Editor
     public override void OnInspectorGUI()
     {
         GameObject go = (GameObject)target;
+
+        if (go.transform.name == "Snap Flow - Assembly" || go.transform.name == "Snap Flow - Disassembly")
+        {
+            return;
+        }
         if (Application.isPlaying) return;
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("SnapFlow Setup Helper", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Snap Flow Setup Helper", EditorStyles.boldLabel);
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
