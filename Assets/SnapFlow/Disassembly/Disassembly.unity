@@ -1208,7 +1208,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1429592956}
-  - component: {fileID: 1429592957}
   m_Layer: 0
   m_Name: Snap Flow - Disassembly
   m_TagString: Untagged
@@ -1231,49 +1230,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1429592957
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429592955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e88caabf7b0e4afdaff6cbc8ded314a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  steps:
-  - objectToRemove: {fileID: 3423172599470233350}
-    sourceSnapZone: {fileID: 0}
-    stepDescription: 
-    onUnSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-  - objectToRemove: {fileID: 0}
-    sourceSnapZone: {fileID: 0}
-    stepDescription: 
-    onUnSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-  - objectToRemove: {fileID: 0}
-    sourceSnapZone: {fileID: 0}
-    stepDescription: 
-    onUnSnapEvents:
-      m_PersistentCalls:
-        m_Calls: []
-  stepCompleteSound: {fileID: 0}
-  highlightMaterial: {fileID: 0}
-  progressBar: {fileID: 0}
-  progressText: {fileID: 0}
-  stepDescriptionText: {fileID: 0}
-  onDisassemblyComplete:
-    m_PersistentCalls:
-      m_Calls: []
-  _currentStep: 0
-  showDebug: 0
-  Showgizmos: 0
-  EnableDEvent: 0
 --- !u!1001 &1518060132
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1431,7 +1387,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1883213470}
-  - component: {fileID: 1883213469}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -1439,18 +1394,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1883213469
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1883213468}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7aecce86e044138b79b1b4726e7832d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1883213470
 Transform:
   m_ObjectHideFlags: 0
