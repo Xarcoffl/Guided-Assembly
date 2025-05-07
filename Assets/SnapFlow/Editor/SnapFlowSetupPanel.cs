@@ -15,7 +15,7 @@ public static class HierarchySnapFlowSetup
     static HierarchySnapFlowSetup()
     {
         EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
-        gearIcon = EditorGUIUtility.IconContent("_popup").image as Texture2D;
+        gearIcon = EditorGUIUtility.IconContent("CustomTool@2x").image as Texture2D;
     }
 
     static void OnHierarchyGUI(int instanceID, Rect selectionRect)
@@ -29,7 +29,6 @@ public static class HierarchySnapFlowSetup
         if (go.GetComponent<Renderer>() == null && (go.GetComponent<AssemblyStepManager>() == null && go.GetComponent<DisassemblyManager>() == null)) return;
         if (GUI.Button(buttonRect, buttonContent, GUIStyle.none))
         {
-            
             ShowCustomMenu(go);
         }
     }
@@ -66,11 +65,11 @@ public static class HierarchySnapFlowSetup
         {
             menu.AddDisabledItem(new GUIContent("SnapFlow/Snap Flow Objects/Snapzone/Add Zone"));
             menu.AddItem(new GUIContent("SnapFlow/Snap Flow Objects/Snapzone/Remove Zone"), false, () => removeSnapzone(go));
-
         }
 
-        menu.AddItem(new GUIContent("SnapFlow/Assign"), false, () => SnapFlowSetupPanel.Open(go));
+        menu.AddItem(new GUIContent("SnapFlow/Assign Snap Flow"), false, () => SnapFlowSetupPanel.Open(go));
         menu.ShowAsContext();
+        
     }
 
     static void removeGrabbable(GameObject go)
@@ -136,13 +135,13 @@ public static class HierarchySnapFlowSetup
 
         enum ManagerType { Assembly, Disassembly }
         ManagerType selectedManagerType = ManagerType.Assembly;
-
+ 
         int selectedStepIndex = 0;
         string[] stepOptions = new string[0];
 
         public static void Open(GameObject go)
         {
-            var window = GetWindow<SnapFlowSetupPanel>("Snap Flow Setup");
+            var window = GetWindow<SnapFlowSetupPanel>("Snap Flow Object Assign Panel");
             window.targetObject = go;
             window.Initialize();
             window.Show();

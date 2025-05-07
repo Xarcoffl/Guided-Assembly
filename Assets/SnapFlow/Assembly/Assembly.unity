@@ -715,12 +715,6 @@ GameObject:
   - component: {fileID: 779366890}
   - component: {fileID: 779366889}
   - component: {fileID: 779366888}
-  - component: {fileID: 779366896}
-  - component: {fileID: 779366895}
-  - component: {fileID: 779366894}
-  - component: {fileID: 779366893}
-  - component: {fileID: 779366892}
-  - component: {fileID: 779366891}
   m_Layer: 0
   m_Name: 11_Placa (1)
   m_TagString: Untagged
@@ -796,198 +790,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &779366891
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d5be54ff720e43488e1738e2db6b6fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OnGrabEvent:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &779366892
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d4b3aeee51a5bd48bf569efd03b09ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ClosestGrabbable: {fileID: 0}
-  UpdateGrabbableFrequency: 0
-  ClosestRemoteGrabbable: {fileID: 0}
-  FireGrabbableEvents: 1
-  CheckRemoteGrabbables: 0
-  RaycastRemoteGrabbables: 0
-  RaycastRemoteFrequency: 0
-  RemoteGrabbablesMustBeVisible: 0
-  RemoteCollisionLayers:
-    serializedVersion: 2
-    m_Bits: 1
---- !u!54 &779366893
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!65 &779366894
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.2780023, y: 0.06000091, z: 0.47999996}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &779366895
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5cdea428d48e2bb488d33d5f75c39bb9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BeingHeld: 0
-  GrabButton: 2
-  Grabtype: 2
-  GrabPhysics: 4
-  GrabMechanic: 1
-  GrabSpeed: 15
-  RemoteGrabbable: 0
-  RemoteGrabMechanic: 0
-  RemoteGrabDistance: 2
-  CanDropMidGrab: 0
-  ThrowForceMultiplier: 2
-  ThrowForceMultiplierAngular: 1.5
-  BreakDistance: 0
-  HideHandGraphics: 0
-  ParentToHands: 0
-  ParentHandModel: 1
-  SnapHandModel: 1
-  CanBeDropped: 1
-  CanBeSnappedToSnapZone: 1
-  ForceDisableKinematicOnDrop: 0
-  InstantMovement: 0
-  MakeChildCollidersGrabbable: 0
-  handPoseType: 1
-  SelectedHandPose: {fileID: 0}
-  CustomHandPose: 0
-  SecondaryGrabBehavior: 0
-  TwoHandedPosition: 0
-  TwoHandedPostionLerpAmount: 0.5
-  TwoHandedRotation: 1
-  TwoHandedRotationLerpAmount: 0.5
-  TwoHandedDropBehavior: 0
-  TwoHandedLookVector: 0
-  SecondHandLookSpeed: 40
-  SecondaryGrabbable: {fileID: 0}
-  OtherGrabbableMustBeGrabbed: {fileID: 0}
-  CollisionSpring: 3000
-  CollisionSlerp: 500
-  CollisionLinearMotionX: 2
-  CollisionLinearMotionY: 2
-  CollisionLinearMotionZ: 2
-  CollisionAngularMotionX: 2
-  CollisionAngularMotionY: 2
-  CollisionAngularMotionZ: 2
-  ApplyCorrectiveForce: 1
-  MoveVelocityForce: 3000
-  MoveAngularVelocityForce: 90
-  LastGrabTime: 0
-  LastRemoteGrabTime: 0
-  LastDropTime: 0
-  AddControllerVelocityOnDrop: 1
-  collisions: []
-  ActiveGrabPoint: {fileID: 0}
-  SecondaryLookOffset: {x: 0, y: 0, z: 0}
-  SecondaryLookAtTransform: {fileID: 0}
-  LocalOffsetTransform: {fileID: 0}
-  GrabPoints: []
-  UseCustomInspector: 1
-  lastFlickTime: 0
-  FlickForce: 1
---- !u!114 &779366896
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779366883}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55b646e2949ffb74c9ca8c512b4411df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  HeldItem: {fileID: 0}
-  StartingItem: {fileID: 0}
-  AutoSnapItem: 0
-  CanDropItem: 1
-  CanRemoveItem: 1
-  ScaleItem: 1
-  DisableColliders: 1
-  ParentObjectToSnapZone: 1
-  DuplicateItemOnGrab: 0
-  MaxDropTime: 0.1
-  LastSnapTime: 0
-  LastUnsnapTime: 0
-  OnlyAllowNames: []
-  ExcludeTransformNames: []
-  SoundOnSnap: {fileID: 0}
-  SoundOnUnsnap: {fileID: 0}
-  OnSnapEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDetachEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  ClosestGrabbable: {fileID: 0}
 --- !u!1 &937888933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,6 +819,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f24ab61e0d4ee4b3b89bd0d995d9d8d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentMode: 0
   steps:
   - objectToGrab: {fileID: 3423172599470233350}
     targetSnapZone: {fileID: 7342997411227174221}
@@ -1027,7 +830,9 @@ MonoBehaviour:
     onSnapEvents:
       m_PersistentCalls:
         m_Calls: []
-  - objectToGrab: {fileID: 0}
+    initialPosition: {x: 0, y: 0, z: 0}
+    initialRotation: {x: 0, y: 0, z: 0, w: 0}
+  - objectToGrab: {fileID: 8793460421092683192}
     targetSnapZone: {fileID: 0}
     StepDescription: 
     onGrabEvents:
@@ -1036,13 +841,20 @@ MonoBehaviour:
     onSnapEvents:
       m_PersistentCalls:
         m_Calls: []
-  stepCompleteSound: {fileID: 0}
-  errorSound: {fileID: 0}
-  HighlightMaterial: {fileID: 0}
-  progressBar: {fileID: 0}
-  progressText: {fileID: 0}
-  stepDescriptionText: {fileID: 0}
-  _currentStep: 0
+    initialPosition: {x: 0, y: 0, z: 0}
+    initialRotation: {x: 0, y: 0, z: 0, w: 0}
+  stepCompleteSound: {fileID: 8300000, guid: 2fd08de76faac0d46a95ff13ae5d85f2, type: 3}
+  errorSound: {fileID: 8300000, guid: 5b096d3829195954e959ce0ec63ca481, type: 3}
+  HighlightMaterial: {fileID: 2100000, guid: b4702feeee8703548986cb04c51c69a0, type: 2}
+  progressBar: {fileID: 2079948497}
+  progressText: {fileID: 172472819}
+  stepDescriptionText: {fileID: 1425810195}
+  onAssemblyComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  showgizmos: 0
+  debuglog: 0
+  AssemblyEvents: 0
 --- !u!4 &937888935
 Transform:
   m_ObjectHideFlags: 0
@@ -3743,7 +3555,7 @@ MonoBehaviour:
   StartingItem: {fileID: 0}
   AutoSnapItem: 0
   CanDropItem: 1
-  CanRemoveItem: 0
+  CanRemoveItem: 1
   ScaleItem: 1
   DisableColliders: 1
   ParentObjectToSnapZone: 1
