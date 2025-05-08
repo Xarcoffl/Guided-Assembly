@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using BNG;
 using SnapFlow.Assembly;
 using SnapFlow.Disassembly;
-using UnityEditor.Rendering;
 
 [InitializeOnLoad]
 public static class HierarchySnapFlowSetup
@@ -23,20 +22,23 @@ public static class HierarchySnapFlowSetup
         GameObject go = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
         if (go == null) return;
 
+        if (go.GetComponent<Renderer>() == null ||
+            (go.GetComponent<AssemblyStepManager>() != null && go.GetComponent<DisassemblyManager>() != null))
+            return;
+
         Rect buttonRect = new Rect(selectionRect.xMax - 20, selectionRect.yMin, 18, selectionRect.height);
         GUIContent buttonContent = new GUIContent(gearIcon, "Snap Flow Setup");
-        
-        if (go.GetComponent<Renderer>() == null && (go.GetComponent<AssemblyStepManager>() == null && go.GetComponent<DisassemblyManager>() == null)) return;
+
         if (GUI.Button(buttonRect, buttonContent, GUIStyle.none))
         {
             ShowCustomMenu(go);
         }
     }
-    
+
     static void ShowCustomMenu(GameObject go)
     {
         GenericMenu menu = new GenericMenu();
-        
+
         var hasGrab = go.GetComponent<Grabbable>();
         var hasSnap = go.GetComponent<SnapZone>();
         var hasEvents = go.GetComponent<GrabbableUnityEvents>();
@@ -47,9 +49,8 @@ public static class HierarchySnapFlowSetup
             {
                 menu.AddItem(new GUIContent("SnapFlow/Snap Flow Objects/Grabbable/Add Grab"), false, () => setupGrabbable(go));
                 menu.AddDisabledItem(new GUIContent("SnapFlow/Snap Flow Objects/Grabbable/Remove Grab"));
-               
             }
-            else 
+            else
             {
                 menu.AddDisabledItem(new GUIContent("SnapFlow/Snap Flow Objects/Grabbable/Add Grab"));
                 menu.AddItem(new GUIContent("SnapFlow/Snap Flow Objects/Grabbable/Remove Grab"), false, () => removeGrabbable(go));
@@ -69,26 +70,20 @@ public static class HierarchySnapFlowSetup
 
         menu.AddItem(new GUIContent("SnapFlow/Assign Snap Flow"), false, () => SnapFlowSetupPanel.Open(go));
         menu.ShowAsContext();
-        
     }
 
-    static void removeGrabbable(GameObject go)
+    static void setupGrabbable(GameObject go)
     {
-        Undo.DestroyObjectImmediate(go.GetComponent<GrabbableUnityEvents>());
-        Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
-        Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
-        Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
-        
-    }
+        Undo.AddComponent<Grabbable>(go);
+        Undo.AddComponent<BoxCollider>(go);
+        Undo.AddComponent<Rigidbody>(go);
+        Undo.AddComponent<GrabbableUnityEvents>(go);
 
-    static void removeSnapzone(GameObject go)
-    {
-        Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
-        Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
-        Undo.DestroyObjectImmediate(go.GetComponent<GrabbablesInTrigger>());
-        Undo.DestroyObjectImmediate(go.GetComponent<GrabAction>());
-        Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
-        Undo.DestroyObjectImmediate(go.GetComponent<SnapZone>());
+        var g = go.GetComponent<Grabbable>();
+        g.GrabButton = GrabButton.Grip;
+        g.Grabtype = HoldType.HoldDown;
+        g.GrabMechanic = GrabType.Snap;
+        g.GrabPhysics = GrabPhysics.FixedJoint;
     }
 
     static void setupSnapzone(GameObject go)
@@ -113,18 +108,22 @@ public static class HierarchySnapFlowSetup
         go.GetComponent<GrabAction>().OnGrabEvent.AddListener(go.GetComponent<SnapZone>().GrabEquipped);
     }
 
-    static void setupGrabbable(GameObject go)
+    static void removeGrabbable(GameObject go)
     {
-        Undo.AddComponent<Grabbable>(go);
-        Undo.AddComponent<BoxCollider>(go);
-        Undo.AddComponent<Rigidbody>(go);
-        Undo.AddComponent<GrabbableUnityEvents>(go);
+        Undo.DestroyObjectImmediate(go.GetComponent<GrabbableUnityEvents>());
+        Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
+        Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
+        Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
+    }
 
-        var g = go.GetComponent<Grabbable>();
-        g.GrabButton = GrabButton.Grip;
-        g.Grabtype = HoldType.HoldDown;
-        g.GrabMechanic = GrabType.Snap;
-        g.GrabPhysics = GrabPhysics.FixedJoint;
+    static void removeSnapzone(GameObject go)
+    {
+        Undo.DestroyObjectImmediate(go.GetComponent<BoxCollider>());
+        Undo.DestroyObjectImmediate(go.GetComponent<Rigidbody>());
+        Undo.DestroyObjectImmediate(go.GetComponent<GrabbablesInTrigger>());
+        Undo.DestroyObjectImmediate(go.GetComponent<GrabAction>());
+        Undo.DestroyObjectImmediate(go.GetComponent<Grabbable>());
+        Undo.DestroyObjectImmediate(go.GetComponent<SnapZone>());
     }
 
     public class SnapFlowSetupPanel : EditorWindow
@@ -135,7 +134,7 @@ public static class HierarchySnapFlowSetup
 
         enum ManagerType { Assembly, Disassembly }
         ManagerType selectedManagerType = ManagerType.Assembly;
- 
+
         int selectedStepIndex = 0;
         string[] stepOptions = new string[0];
 
@@ -153,7 +152,6 @@ public static class HierarchySnapFlowSetup
             disassemblyManager = FindObjectOfType<DisassemblyManager>();
             RefreshStepOptions();
         }
-        
 
         void RefreshStepOptions()
         {
@@ -199,11 +197,9 @@ public static class HierarchySnapFlowSetup
             EditorGUILayout.ObjectField("Target Object", targetObject, typeof(GameObject), true);
             EditorGUILayout.Space();
 
-            // Manager selector
             selectedManagerType = (ManagerType)EditorGUILayout.EnumPopup("Manager Type", selectedManagerType);
             EditorGUILayout.Space();
 
-            // Manager presence check
             if ((selectedManagerType == ManagerType.Assembly && assemblyManager == null) ||
                 (selectedManagerType == ManagerType.Disassembly && disassemblyManager == null))
             {
@@ -221,7 +217,6 @@ public static class HierarchySnapFlowSetup
                 return;
             }
 
-            // No steps check
             if (stepOptions.Length == 0)
             {
                 EditorGUILayout.HelpBox("No steps found. Add at least one step.", MessageType.Info);
@@ -244,12 +239,10 @@ public static class HierarchySnapFlowSetup
                 return;
             }
 
-            // Step selection
             EditorGUILayout.LabelField("Select Step:");
             selectedStepIndex = EditorGUILayout.Popup(selectedStepIndex, stepOptions);
             EditorGUILayout.Space();
 
-            // Assign buttons
             if (GUILayout.Button("Assign as ObjectToGrab"))
             {
                 if (selectedManagerType == ManagerType.Assembly)
@@ -271,22 +264,17 @@ public static class HierarchySnapFlowSetup
             {
                 if (selectedManagerType == ManagerType.Assembly)
                 {
-                    Undo.RecordObject(assemblyManager, "Assign as a SnapZone");
+                    Undo.RecordObject(assemblyManager, "Assign SnapZone");
                     assemblyManager.steps[selectedStepIndex].targetSnapZone = targetObject.GetComponent<SnapZone>();
                     EditorUtility.SetDirty(assemblyManager);
                 }
                 else
                 {
-                    Undo.RecordObject(disassemblyManager, "Assign as aSnapZone");
+                    Undo.RecordObject(disassemblyManager, "Assign SourceSnapZone");
                     disassemblyManager.steps[selectedStepIndex].sourceSnapZone = targetObject.GetComponent<SnapZone>();
                     EditorUtility.SetDirty(disassemblyManager);
                 }
                 Debug.Log($"{targetObject.name} assigned as SnapZone to {stepOptions[selectedStepIndex]}");
-            }
-
-            if (GUILayout.Button("Ping in Hierarchy"))
-            {
-                EditorGUIUtility.PingObject(targetObject);
             }
         }
     }
