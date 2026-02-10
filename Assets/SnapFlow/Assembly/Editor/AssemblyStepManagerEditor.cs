@@ -21,6 +21,7 @@ namespace SnapFlow.Assembly.Editor
         private SerializedProperty _progressText;
         private SerializedProperty _stepDescriptionText;
         private SerializedProperty _onAssemblyCompleted;
+        private SerializedProperty _sopMode;
       
       
         
@@ -46,6 +47,7 @@ namespace SnapFlow.Assembly.Editor
             _showGizmos = serializedObject.FindProperty("showgizmos");
             _showDebugLogs = serializedObject.FindProperty("debuglog");
             _assemblyEvents = serializedObject.FindProperty("AssemblyEvents");
+            _sopMode = serializedObject.FindProperty("sopMode");
 
             _reorderableSteps = new ReorderableList(serializedObject, _stepsProperty, true, true, false, true);
             _reorderableSteps.drawHeaderCallback = rect =>
@@ -212,6 +214,7 @@ namespace SnapFlow.Assembly.Editor
         {
       
             EditorGUILayout.Space(10);
+            EditorGUILayout.PropertyField(_sopMode);
             EditorGUILayout.LabelField("Sound Clips",EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_stepCompleteSound, new GUIContent("Success Soundclip"));
             EditorGUILayout.PropertyField(_errorSound, new GUIContent("Error Soundclip"));
@@ -327,7 +330,7 @@ namespace SnapFlow.Assembly.Editor
                     Material highlightMat = manager.HighlightMaterial;
                     if (highlightMat != null)
                     {
-                        var matColor = highlightMat.color;
+                        var matColor = Color.cyan;
                         matColor.a = 0.3f;
                         Handles.color = matColor;
 

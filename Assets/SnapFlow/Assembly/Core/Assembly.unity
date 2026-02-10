@@ -191,7 +191,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 398d4f6f7afb145419197ebb32ef6a78, type: 2}
+  - {fileID: 2100000, guid: cdb880ca4ae02a2409bf1137910de762, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -768,7 +768,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.628, y: 0.089, z: 1.259}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -1361,17 +1361,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f24ab61e0d4ee4b3b89bd0d995d9d8d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentMode: 0
+  sopMode: 0
   steps:
   - objectToGrab: {fileID: 344784923}
     targetSnapZone: {fileID: 1979291881}
     StepDescription: 1
     onGrabEvents:
       m_PersistentCalls:
+        m_Calls: []
+    onSnapEvents:
+      m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1052892059}
-          m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_MethodName: SetActive
+        - m_Target: {fileID: 1979291873}
+          m_TargetAssemblyTypeName: UnityEngine.MeshRenderer, UnityEngine
+          m_MethodName: set_enabled
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -1380,21 +1383,6 @@ MonoBehaviour:
             m_FloatArgument: 0
             m_StringArgument: 
             m_BoolArgument: 0
-          m_CallState: 2
-    onSnapEvents:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 1052892059}
-          m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_MethodName: SetActive
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 1
           m_CallState: 2
     initialPosition: {x: 0, y: 0, z: 0}
     initialRotation: {x: 0, y: 0, z: 0, w: 0}
@@ -1435,13 +1423,15 @@ MonoBehaviour:
     initialRotation: {x: 0, y: 0, z: 0, w: 0}
   stepCompleteSound: {fileID: 8300000, guid: 2fd08de76faac0d46a95ff13ae5d85f2, type: 3}
   errorSound: {fileID: 8300000, guid: 5b096d3829195954e959ce0ec63ca481, type: 3}
-  HighlightMaterial: {fileID: 2100000, guid: b4702feeee8703548986cb04c51c69a0, type: 2}
+  HighlightMaterial: {fileID: 2100000, guid: cdb880ca4ae02a2409bf1137910de762, type: 2}
   progressBar: {fileID: 2079948497}
-  progressText: {fileID: 172472819}
-  stepDescriptionText: {fileID: 1425810195}
+  progressText: {fileID: 1425810195}
+  stepDescriptionText: {fileID: 172472819}
   onAssemblyComplete:
     m_PersistentCalls:
       m_Calls: []
+  Primary: {fileID: 0}
+  Secondary: {fileID: 0}
   showgizmos: 0
   debuglog: 0
   AssemblyEvents: 0
@@ -1654,7 +1644,6 @@ GameObject:
   - component: {fileID: 1312168185}
   - component: {fileID: 1312168184}
   - component: {fileID: 1312168191}
-  - component: {fileID: 1312168190}
   - component: {fileID: 1312168189}
   - component: {fileID: 1312168188}
   m_Layer: 0
@@ -1850,27 +1839,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &1312168190
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1312168183}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1312168191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2477,7 +2445,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 398d4f6f7afb145419197ebb32ef6a78, type: 2}
+  - {fileID: 2100000, guid: cdb880ca4ae02a2409bf1137910de762, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
