@@ -16,7 +16,8 @@ namespace SnapFlow.Assembly.Editor
         private SerializedProperty _stepsProperty;
         private SerializedProperty _stepCompleteSound;
         private SerializedProperty _errorSound;
-        private SerializedProperty _highlightMaterial;
+        private SerializedProperty _highlightObjMaterial;
+        private SerializedProperty _highlightSnapMaterial;
         private SerializedProperty _progressBar;
         private SerializedProperty _progressText;
         private SerializedProperty _stepDescriptionText;
@@ -38,7 +39,8 @@ namespace SnapFlow.Assembly.Editor
       
             _stepsProperty = serializedObject.FindProperty("steps");
             _stepCompleteSound = serializedObject.FindProperty("stepCompleteSound");
-            _highlightMaterial = serializedObject.FindProperty("HighlightMaterial");
+            _highlightObjMaterial = serializedObject.FindProperty("highlightObjMaterial");
+            _highlightSnapMaterial = serializedObject.FindProperty("highlightSnapMaterial");
             _errorSound = serializedObject.FindProperty("errorSound");
             _progressBar = serializedObject.FindProperty("progressBar");
             _progressText = serializedObject.FindProperty("progressText");
@@ -220,7 +222,8 @@ namespace SnapFlow.Assembly.Editor
             EditorGUILayout.PropertyField(_errorSound, new GUIContent("Error Soundclip"));
             EditorGUILayout.Space(15);
             EditorGUILayout.LabelField("Highlights and Description",EditorStyles.whiteLabel);
-            EditorGUILayout.PropertyField(_highlightMaterial, new GUIContent("Highlight Material"));
+            EditorGUILayout.PropertyField(_highlightObjMaterial, new GUIContent("Highlight Object Material"));
+            EditorGUILayout.PropertyField(_highlightSnapMaterial, new GUIContent("Highlight Snap Material"));
             EditorGUILayout.PropertyField(_stepDescriptionText, new GUIContent("Step Description Text"));
             EditorGUILayout.Space(15);
             EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
@@ -327,7 +330,7 @@ namespace SnapFlow.Assembly.Editor
                     };
                     Handles.Label(midPoint, $"Step {i + 1}", labelStyle);
 
-                    Material highlightMat = manager.HighlightMaterial;
+                    Material highlightMat = manager.highlightObjMaterial;
                     if (highlightMat != null)
                     {
                         var matColor = Color.cyan;

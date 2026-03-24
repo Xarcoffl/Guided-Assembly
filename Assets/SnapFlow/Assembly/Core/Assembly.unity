@@ -1363,29 +1363,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sopMode: 0
   steps:
-  - objectToGrab: {fileID: 344784923}
-    targetSnapZone: {fileID: 1979291881}
-    StepDescription: 1
-    onGrabEvents:
-      m_PersistentCalls:
-        m_Calls: []
-    onSnapEvents:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 1979291873}
-          m_TargetAssemblyTypeName: UnityEngine.MeshRenderer, UnityEngine
-          m_MethodName: set_enabled
-          m_Mode: 6
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-    initialPosition: {x: 0, y: 0, z: 0}
-    initialRotation: {x: 0, y: 0, z: 0, w: 0}
   - objectToGrab: {fileID: 1312168191}
     targetSnapZone: {fileID: 46311983}
     StepDescription: 2
@@ -1421,9 +1398,35 @@ MonoBehaviour:
           m_CallState: 2
     initialPosition: {x: 0, y: 0, z: 0}
     initialRotation: {x: 0, y: 0, z: 0, w: 0}
+  - objectToGrab: {fileID: 344784923}
+    targetSnapZone: {fileID: 1979291881}
+    StepDescription: 1
+    onGrabEvents:
+      m_PersistentCalls:
+        m_Calls: []
+    onSnapEvents:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1979291873}
+          m_TargetAssemblyTypeName: UnityEngine.MeshRenderer, UnityEngine
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    initialPosition: {x: 0, y: 0, z: 0}
+    initialRotation: {x: 0, y: 0, z: 0, w: 0}
   stepCompleteSound: {fileID: 8300000, guid: 2fd08de76faac0d46a95ff13ae5d85f2, type: 3}
   errorSound: {fileID: 8300000, guid: 5b096d3829195954e959ce0ec63ca481, type: 3}
-  HighlightMaterial: {fileID: 2100000, guid: cdb880ca4ae02a2409bf1137910de762, type: 2}
+  highlightObjMaterial: {fileID: 2100000, guid: 6367685212760ec4687219ff0596b9b6,
+    type: 2}
+  highlightSnapMaterial: {fileID: 2100000, guid: 6367685212760ec4687219ff0596b9b6,
+    type: 2}
   progressBar: {fileID: 2079948497}
   progressText: {fileID: 1425810195}
   stepDescriptionText: {fileID: 172472819}

@@ -38,7 +38,8 @@ namespace SnapFlow.Assembly
         public List<AssemblyStep> steps = new();
         public AudioClip stepCompleteSound;
         public AudioClip errorSound;
-        public Material HighlightMaterial;
+        public Material highlightObjMaterial;
+        public Material highlightSnapMaterial;
         public Slider progressBar;
         public TextMeshProUGUI progressText;
         public TextMeshProUGUI stepDescriptionText;
@@ -46,6 +47,9 @@ namespace SnapFlow.Assembly
 
         public Grabber Primary;
         public Grabber Secondary;
+        
+        private List<Material> InitialObjMaterials;
+        private List<Material> InitialSnapMaterials;
 
 
         public bool showgizmos = false;
@@ -87,6 +91,11 @@ namespace SnapFlow.Assembly
                     step.initialRotation = step.objectToGrab.transform.rotation;
                 }
             }
+        }
+
+        private void CacheInitialObjMaterial()
+        {
+            
         }
 
 
@@ -207,9 +216,7 @@ namespace SnapFlow.Assembly
                 ResetObjectByReference(snappedObject);
                 return;
             }
-           
             
-
             _currentStepSnapped = true; // ✅ IMPORTANT
 
             step.targetSnapZone.CanRemoveItem = false;
@@ -239,7 +246,7 @@ namespace SnapFlow.Assembly
             foreach (var rend in renderers)
             {
                 if (rend != null)
-                    rend.material = highlight ? HighlightMaterial : rend.sharedMaterial;
+                    rend.material = highlight ? highlightObjMaterial : rend.sharedMaterial;
             }
         }
 
@@ -249,7 +256,7 @@ namespace SnapFlow.Assembly
             foreach (var rend in renderers)
             {
                 if (rend != null)
-                    rend.material = highlight ? HighlightMaterial : rend.sharedMaterial;
+                    rend.material = highlight ? highlightSnapMaterial : rend.sharedMaterial;
             }
         }
 
