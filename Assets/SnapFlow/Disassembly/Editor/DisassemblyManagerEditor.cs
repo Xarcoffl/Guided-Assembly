@@ -26,7 +26,7 @@ namespace SnapFlow.Disassembly.Editor
 
         private SerializedProperty _showDebugLogs;
         private SerializedProperty _showGizmos;
-        private SerializedProperty _enableDisEvent;
+        private SerializedProperty _assemblyEvents;
 
         private void OnEnable()
         {
@@ -37,9 +37,9 @@ namespace SnapFlow.Disassembly.Editor
             _progressText = serializedObject.FindProperty("progressText");
             _stepDescriptionText = serializedObject.FindProperty("stepDescriptionText");
             _onDisassemblyComplete = serializedObject.FindProperty("onDisassemblyComplete");
-            _showGizmos = serializedObject.FindProperty("Showgizmos");
-            _showDebugLogs = serializedObject.FindProperty("showDebug");
-            _enableDisEvent = serializedObject.FindProperty("EnableDEvent");
+            _showGizmos = serializedObject.FindProperty("showgizmos");
+            _showDebugLogs = serializedObject.FindProperty("debuglog");
+            _assemblyEvents = serializedObject.FindProperty("AssemblyEvents");
             
             
             _reorderableSteps = new ReorderableList(serializedObject, _disassemblyProperty, true, true, false, true);
@@ -219,10 +219,9 @@ namespace SnapFlow.Disassembly.Editor
             EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_showDebugLogs, new GUIContent("Debug Logs"));
             EditorGUILayout.PropertyField(_showGizmos, new GUIContent("Show Gizmos"));
-            EditorGUILayout.PropertyField(_enableDisEvent, new GUIContent("Disassembly Events"));
-            SnapFlowDEditorGizmos.ShowGizmos = _showGizmos.boolValue;
+            EditorGUILayout.PropertyField(_assemblyEvents, new GUIContent("Show Assembly Events"));
             GUILayout.Space(10);
-            if (_enableDisEvent.boolValue)
+            if (_assemblyEvents.boolValue)
             {
                 
                 EditorGUILayout.LabelField("Disassembly Event",EditorStyles.whiteLabel);
@@ -247,7 +246,8 @@ namespace SnapFlow.Disassembly.Editor
             GUI.backgroundColor = SnapFlowOrange;
             if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
             {
-                foreach (var manager in Object.FindObjectsOfType<DisassemblyManager>())
+                var managers = Object.FindObjectsByType<DisassemblyManager>(FindObjectsSortMode.None);
+                foreach (var manager in managers)
                 {
                     manager.name = "Snap Flow - Disassembly";
                     break;

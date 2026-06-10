@@ -36,9 +36,9 @@ namespace SnapFlow.Disassembly
         private Dictionary<MeshRenderer, Material[]> cachedMaterials = new();
         public HashSet<int> CompletedSteps = new();
 
-        public bool showDebug = false;
-        public bool Showgizmos = false;
-        public bool EnableDEvent = false;
+        public bool debuglog = false;
+        public bool showgizmos = false;
+        public bool AssemblyEvents = false;
 
         private void Start()
         {
@@ -76,7 +76,7 @@ namespace SnapFlow.Disassembly
         {
             if (stepIndex < 0 || stepIndex >= steps.Count)
             {
-                if (showDebug) Debug.Log("[SnapFlow] All steps disassembled!");
+                if (debuglog) Debug.Log("[SnapFlow] All steps disassembled!");
                 return;
             }
 
@@ -111,7 +111,7 @@ namespace SnapFlow.Disassembly
 
             if (obj != step.objectToRemove)
             {
-                if (showDebug) Debug.LogWarning("[SnapFlow] Wrong object removed: " + obj.name);
+                if (debuglog) Debug.LogWarning("[SnapFlow] Wrong object removed: " + obj.name);
                 TriggerErrorFeedback(obj.transform.position);
                 return;
             }
@@ -119,7 +119,7 @@ namespace SnapFlow.Disassembly
             if (CompletedSteps.Contains(stepIndex))
                 return;
 
-            if (showDebug) Debug.Log("[SnapFlow] Correct object removed: " + obj.name);
+            if (debuglog) Debug.Log("[SnapFlow] Correct object removed: " + obj.name);
             CompletedSteps.Add(stepIndex);
             HighlightSnapZone(step.sourceSnapZone, false);
             step.onUnSnapEvents?.Invoke();
@@ -133,7 +133,7 @@ namespace SnapFlow.Disassembly
                 SetupStep(_currentStep);
             else
             {
-                if (showDebug) Debug.Log("[SnapFlow] Disassembly Completed!");
+                if (debuglog) Debug.Log("[SnapFlow] Disassembly Completed!");
                 onDisassemblyComplete?.Invoke();
             }
         }
@@ -142,16 +142,19 @@ namespace SnapFlow.Disassembly
         {
             if (zone == null) return;
 
-            var meshRenderer = zone.GetComponent<MeshRenderer>();
-            if (meshRenderer == null) return;
+            var renderers = zone.GetComponentsInChildren<MeshRenderer>();
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null) continue;
 
-            if (highlight && highlightMaterial != null)
-            {
-                meshRenderer.material = highlightMaterial;
-            }
-            else if (!highlight && cachedMaterials.ContainsKey(meshRenderer))
-            {
-                meshRenderer.materials = (Material[])cachedMaterials[meshRenderer].Clone();
+                if (highlight && highlightMaterial != null)
+                {
+                    renderer.material = highlightMaterial;
+                }
+                else if (!highlight && cachedMaterials.ContainsKey(renderer))
+                {
+                    renderer.materials = (Material[])cachedMaterials[renderer].Clone();
+                }
             }
         }
 

@@ -294,7 +294,8 @@ namespace SnapFlow.Assembly.Editor
         {
             if (!ShowGizmos) return;
 
-            foreach (var manager in Object.FindObjectsOfType<AssemblyStepManager>())
+            var managers = Object.FindObjectsByType<AssemblyStepManager>(FindObjectsSortMode.None);
+            foreach (var manager in managers)
             {
                 var steps = manager.steps;
                 if (steps == null || steps.Count == 0) return;

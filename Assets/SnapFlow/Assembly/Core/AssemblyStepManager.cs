@@ -182,7 +182,7 @@ namespace SnapFlow.Assembly
             HighlightObject(step.objectToGrab, false);
             HighlightSnapZone(step.targetSnapZone, true);
             step.onGrabEvents?.Invoke();
-            Debug.Log($"Grabbed: {step.objectToGrab.name}");
+            if (debuglog) Debug.Log($"[SnapFlow] Grabbed: {step.objectToGrab.name}");
         }
         
 
