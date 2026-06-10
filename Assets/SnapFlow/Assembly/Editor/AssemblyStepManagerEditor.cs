@@ -22,26 +22,20 @@ namespace SnapFlow.Assembly.Editor
         private SerializedProperty _progressText;
         private SerializedProperty _stepDescriptionText;
         private SerializedProperty _onAssemblyCompleted;
-        private SerializedProperty _sopMode;
-      
-      
-        
+        private SerializedProperty _showDebugLogs;
+        private SerializedProperty _showGizmos;
+        private SerializedProperty _assemblyEvents;
 
         private ReorderableList _reorderableSteps;
         private List<bool> _foldoutStates = new();
 
-        private SerializedProperty _showDebugLogs ;
-        private SerializedProperty _showGizmos ;
-        private SerializedProperty _assemblyEvents;
-
         private void OnEnable()
         {
-      
             _stepsProperty = serializedObject.FindProperty("steps");
             _stepCompleteSound = serializedObject.FindProperty("stepCompleteSound");
+            _errorSound = serializedObject.FindProperty("errorSound");
             _highlightObjMaterial = serializedObject.FindProperty("highlightObjMaterial");
             _highlightSnapMaterial = serializedObject.FindProperty("highlightSnapMaterial");
-            _errorSound = serializedObject.FindProperty("errorSound");
             _progressBar = serializedObject.FindProperty("progressBar");
             _progressText = serializedObject.FindProperty("progressText");
             _stepDescriptionText = serializedObject.FindProperty("stepDescriptionText");
@@ -49,7 +43,6 @@ namespace SnapFlow.Assembly.Editor
             _showGizmos = serializedObject.FindProperty("showgizmos");
             _showDebugLogs = serializedObject.FindProperty("debuglog");
             _assemblyEvents = serializedObject.FindProperty("AssemblyEvents");
-            _sopMode = serializedObject.FindProperty("sopMode");
 
             _reorderableSteps = new ReorderableList(serializedObject, _stepsProperty, true, true, false, true);
             _reorderableSteps.drawHeaderCallback = rect =>
@@ -192,54 +185,55 @@ namespace SnapFlow.Assembly.Editor
         private new static void DrawHeader()
         {
             GUILayout.Space(10);
+            
             GUIStyle titleStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 24,
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold,
-            
-            
-                normal = { textColor = SnapFlowBlue}
+                normal = { textColor = SnapFlowBlue }
             };
 
-            GUIStyle taglinestyle = new GUIStyle(GUI.skin.label)
+            GUIStyle taglineStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold
             };
-            GUILayout.Button("SNAP FLOW", titleStyle);
-            GUILayout.Label("Assembly Editor", taglinestyle);
+            
+            GUILayout.Label("SNAP FLOW", titleStyle);
+            GUILayout.Label("Assembly Editor", taglineStyle);
             GUILayout.Space(10);
         }
 
         private void DrawGeneralSettings()
         {
-      
             EditorGUILayout.Space(10);
-            EditorGUILayout.PropertyField(_sopMode);
-            EditorGUILayout.LabelField("Sound Clips",EditorStyles.whiteLabel);
-            EditorGUILayout.PropertyField(_stepCompleteSound, new GUIContent("Success Soundclip"));
-            EditorGUILayout.PropertyField(_errorSound, new GUIContent("Error Soundclip"));
+            EditorGUILayout.LabelField("Sound Clips", EditorStyles.whiteLabel);
+            EditorGUILayout.PropertyField(_stepCompleteSound, new GUIContent("Success Sound Clip"));
+            EditorGUILayout.PropertyField(_errorSound, new GUIContent("Error Sound Clip"));
+            
             EditorGUILayout.Space(15);
-            EditorGUILayout.LabelField("Highlights and Description",EditorStyles.whiteLabel);
+            EditorGUILayout.LabelField("Highlights & Description", EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_highlightObjMaterial, new GUIContent("Highlight Object Material"));
-            EditorGUILayout.PropertyField(_highlightSnapMaterial, new GUIContent("Highlight Snap Material"));
+            EditorGUILayout.PropertyField(_highlightSnapMaterial, new GUIContent("Highlight Snap Zone Material"));
             EditorGUILayout.PropertyField(_stepDescriptionText, new GUIContent("Step Description Text"));
+            
             EditorGUILayout.Space(15);
-            EditorGUILayout.LabelField("Progress UI",EditorStyles.whiteLabel);
+            EditorGUILayout.LabelField("Progress UI", EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_progressBar, new GUIContent("Progress Bar"));
             EditorGUILayout.PropertyField(_progressText, new GUIContent("Progress Text"));
-            GUILayout.Space(20);
-            EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
+            
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Debug Settings", EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_showDebugLogs, new GUIContent("Debug Logs"));
             EditorGUILayout.PropertyField(_showGizmos, new GUIContent("Show Gizmos"));
-            SnapFlowEditorGizmos.ShowGizmos = _showGizmos.boolValue;
-            EditorGUILayout.PropertyField(_assemblyEvents, new GUIContent("Assembly Events"));
+            EditorGUILayout.PropertyField(_assemblyEvents, new GUIContent("Show Assembly Events"));
+            
             GUILayout.Space(10);
             if (_assemblyEvents.boolValue)
             {
-                EditorGUILayout.LabelField("Assembly Event",EditorStyles.whiteLabel);
-                EditorGUILayout.PropertyField(_onAssemblyCompleted, new GUIContent("On-Assembly Complete"));
+                EditorGUILayout.LabelField("Assembly Event", EditorStyles.whiteLabel);
+                EditorGUILayout.PropertyField(_onAssemblyCompleted, new GUIContent("On Assembly Complete"));
             }
             GUILayout.Space(10);
         }
@@ -261,7 +255,8 @@ namespace SnapFlow.Assembly.Editor
             GUI.backgroundColor = SnapFlowOrange;
             if (GUILayout.Button(new GUIContent("Add New Step"), GUILayout.Height(30)))
             {
-                foreach (var manager in Object.FindObjectsOfType<AssemblyStepManager>())
+                var managers = Object.FindObjectsByType<AssemblyStepManager>(FindObjectsSortMode.None);
+                foreach (var manager in managers)
                 {
                     manager.name = "Snap Flow - Assembly";
                     break;
@@ -276,7 +271,7 @@ namespace SnapFlow.Assembly.Editor
 
         private void Log(string message)
         {
-            if (_showDebugLogs.boolValue)
+            if (_showDebugLogs != null && _showDebugLogs.boolValue)
             {
                 Debug.Log("[SnapFlow Editor] " + message);
             }

@@ -5,7 +5,6 @@ using UnityEngine;
 using BNG;
 using UnityEngine.Events;
 using TMPro;
-using UnityEditor;
 using UnityEngine.UI;
 using Slider = UnityEngine.UI.Slider;
 
@@ -26,15 +25,6 @@ namespace SnapFlow.Assembly
             [HideInInspector] public Quaternion initialRotation;
         }
 
-        public enum SopMode
-        {
-            Strict,
-            Practice
-        }
-
-        public SopMode sopMode = SopMode.Strict;
-
-
         public List<AssemblyStep> steps = new();
         public AudioClip stepCompleteSound;
         public AudioClip errorSound;
@@ -48,8 +38,10 @@ namespace SnapFlow.Assembly
         public Grabber Primary;
         public Grabber Secondary;
         
-        private List<Material> InitialObjMaterials;
-        private List<Material> InitialSnapMaterials;
+        // Material caching system
+        private Dictionary<MeshRenderer, Material[]> CachedMaterials = new();
+        private Dictionary<Grabbable, Vector3> CachedObjectPositions = new();
+        private Dictionary<Grabbable, Quaternion> CachedObjectRotations = new();
 
 
         public bool showgizmos = false;
@@ -64,18 +56,15 @@ namespace SnapFlow.Assembly
 
         private void Start()
         {
-            CacheInitialTransforms();
-            if (sopMode == SopMode.Practice)
+            if (steps == null || steps.Count == 0)
             {
-                RegisterPracticeReleaseListeners();
-            }
-            stepLookup = new Dictionary<Grabbable, AssemblyStep>();
-            foreach (var step in steps)
-            {
-                if (step.objectToGrab != null)
-                    stepLookup[step.objectToGrab] = step;
+                Debug.LogWarning("[SnapFlow] No assembly steps configured!");
+                return;
             }
 
+            CacheInitialTransforms();
+            CacheInitialMaterials();
+            InitializeStepLookup();
             SetupStep(_currentStep);
             UpdateProgressUI();
         }
@@ -89,71 +78,68 @@ namespace SnapFlow.Assembly
                 {
                     step.initialPosition = step.objectToGrab.transform.position;
                     step.initialRotation = step.objectToGrab.transform.rotation;
+                    
+                    CachedObjectPositions[step.objectToGrab] = step.initialPosition;
+                    CachedObjectRotations[step.objectToGrab] = step.initialRotation;
                 }
             }
         }
 
-        private void CacheInitialObjMaterial()
-        {
-            
-        }
-
-
-        private void RegisterPracticeReleaseListeners()
+        private void CacheInitialMaterials()
         {
             foreach (var step in steps)
             {
-                if (step.objectToGrab == null) continue;
+                // Cache object materials
+                if (step.objectToGrab != null)
+                {
+                    var renderers = step.objectToGrab.GetComponentsInChildren<MeshRenderer>();
+                    foreach (var renderer in renderers)
+                    {
+                        if (renderer != null && !CachedMaterials.ContainsKey(renderer))
+                        {
+                            // Store copies of materials to avoid affecting shared materials
+                            CachedMaterials[renderer] = (Material[])renderer.materials.Clone();
+                        }
+                    }
+                }
 
-                var events = step.objectToGrab.GetComponent<GrabbableUnityEvents>();
-                if (events == null) continue;
-
-                events.onRelease.RemoveAllListeners();
-                events.onRelease.AddListener(() => OnPracticeObjectReleased(step.objectToGrab));
+                // Cache snap zone materials
+                if (step.targetSnapZone != null)
+                {
+                    var renderers = step.targetSnapZone.GetComponentsInChildren<MeshRenderer>();
+                    foreach (var renderer in renderers)
+                    {
+                        if (renderer != null && !CachedMaterials.ContainsKey(renderer))
+                        {
+                            CachedMaterials[renderer] = (Material[])renderer.materials.Clone();
+                        }
+                    }
+                }
             }
         }
 
-        private void OnPracticeObjectReleased(Grabbable releasedObject)
+        private void InitializeStepLookup()
         {
-            if (sopMode != SopMode.Practice)
-                return;
-
-            if (_currentStep < 0 || _currentStep >= steps.Count)
-                return;
-            
-            var currentStep = steps[_currentStep];
-            
-            // Case 1: Wrong object
-            if (releasedObject != currentStep.objectToGrab)
+            stepLookup = new Dictionary<Grabbable, AssemblyStep>();
+            foreach (var step in steps)
             {
-                ResetObjectByReference(releasedObject);
-                return;
-            }
-
-            // Case 2: Correct object but not snapped yet
-            if (!_currentStepSnapped)
-            {
-                ResetObject(currentStep);
+                if (step.objectToGrab != null)
+                    stepLookup[step.objectToGrab] = step;
             }
         }
 
-        private void ResetObjectByReference(Grabbable obj)
-        {
-            if (stepLookup.TryGetValue(obj, out var step))
-                ResetObject(step);
-        }
-        
-        
+
+
 
         private void SetupStep(int stepIndex)
         {
             if (stepIndex < 0 || stepIndex >= steps.Count)
             {
-                Debug.Log("All steps completed.");
+                if (debuglog) Debug.Log("[SnapFlow] All steps completed.");
                 return;
             }
-// Turning off all the snapzone attached to the manager and letting only stepwise snapzone to be enabled 
 
+            // Disable all snap zones except current
             foreach (var s in steps)
                 if (s.targetSnapZone != null)
                     s.targetSnapZone.enabled = false;
@@ -162,38 +148,32 @@ namespace SnapFlow.Assembly
             if (step.targetSnapZone != null)
                 step.targetSnapZone.enabled = true;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            if (sopMode == SopMode.Strict)
+            // Only current object is grabbable (Strict mode)
+            foreach (var s in steps)
             {
-                foreach (var o in steps)
-                    if (o.objectToGrab != null)
-                        o.objectToGrab.GrabPhysics = GrabPhysics.None;
-
-                if (step.objectToGrab != null)
-                    step.objectToGrab.GrabPhysics = GrabPhysics.FixedJoint;
-            }
-            else
-            {
-                foreach (var o in steps)
-                    if (o.objectToGrab != null)
-                        o.objectToGrab.GrabPhysics = GrabPhysics.FixedJoint;
+                if (s.objectToGrab != null)
+                    s.objectToGrab.GrabPhysics = GrabPhysics.None;
             }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////          
+            if (step.objectToGrab != null)
+                step.objectToGrab.GrabPhysics = GrabPhysics.FixedJoint;
+
             HighlightObject(step.objectToGrab, true);
 
-            var grabEvents = step.objectToGrab.GetComponent<GrabbableUnityEvents>();
-            if (grabEvents)
+            // Register grab event
+            var grabEvents = step.objectToGrab?.GetComponent<GrabbableUnityEvents>();
+            if (grabEvents != null)
             {
                 grabEvents.onGrab.RemoveAllListeners();
                 grabEvents.onGrab.AddListener((GrabbableUnityEvents) => OnObjectGrabbed(stepIndex));
             }
-                
 
-
-            step.targetSnapZone.OnSnapEvent.RemoveAllListeners();
-            step.targetSnapZone.OnSnapEvent.AddListener((snapped) => OnObjectSnapped(snapped, stepIndex));
+            // Register snap event
+            if (step.targetSnapZone != null)
+            {
+                step.targetSnapZone.OnSnapEvent.RemoveAllListeners();
+                step.targetSnapZone.OnSnapEvent.AddListener((snapped) => OnObjectSnapped(snapped, stepIndex));
+            }
         }
 
         private void OnObjectGrabbed(int stepIndex)
@@ -208,33 +188,41 @@ namespace SnapFlow.Assembly
 
         private void OnObjectSnapped(Grabbable snappedObject, int stepIndex)
         {
+            if (stepIndex < 0 || stepIndex >= steps.Count)
+                return;
+
             var step = steps[stepIndex];
 
             if (snappedObject != step.objectToGrab)
             {
+                if (debuglog) Debug.LogWarning($"[SnapFlow] Wrong object snapped: {snappedObject.name}");
                 TriggerErrorFeedback(snappedObject.transform.position);
                 ResetObjectByReference(snappedObject);
                 return;
             }
             
-            _currentStepSnapped = true; // ✅ IMPORTANT
+            _currentStepSnapped = true;
 
-            step.targetSnapZone.CanRemoveItem = false;
+            if (step.targetSnapZone != null)
+                step.targetSnapZone.CanRemoveItem = false;
 
             HighlightSnapZone(step.targetSnapZone, false);
             step.onSnapEvents?.Invoke();
-            PlaySound(stepCompleteSound, step.targetSnapZone.transform.position);
+            PlaySound(stepCompleteSound, step.targetSnapZone?.transform.position ?? Vector3.zero);
+
+            if (AssemblyEvents) Debug.Log($"[SnapFlow] Step {stepIndex + 1} completed: {snappedObject.name}");
 
             _currentStep++;
             UpdateProgressUI();
 
             if (_currentStep < steps.Count)
             {
-                _currentStepSnapped = false; // reset for next step
+                _currentStepSnapped = false;
                 SetupStep(_currentStep);
             }
             else
             {
+                if (debuglog) Debug.Log("[SnapFlow] Assembly completed!");
                 onAssemblyComplete?.Invoke();
             }
         }
@@ -242,21 +230,42 @@ namespace SnapFlow.Assembly
 
         private void HighlightObject(Grabbable obj, bool highlight)
         {
+            if (obj == null) return;
+
             var renderers = obj.GetComponentsInChildren<MeshRenderer>();
             foreach (var rend in renderers)
             {
-                if (rend != null)
-                    rend.material = highlight ? highlightObjMaterial : rend.sharedMaterial;
+                if (rend == null) continue;
+
+                if (highlight && highlightObjMaterial != null)
+                {
+                    rend.material = highlightObjMaterial;
+                }
+                else if (!highlight && CachedMaterials.ContainsKey(rend))
+                {
+                    // Restore original materials
+                    rend.materials = (Material[])CachedMaterials[rend].Clone();
+                }
             }
         }
 
         private void HighlightSnapZone(SnapZone zone, bool highlight)
         {
+            if (zone == null) return;
+
             var renderers = zone.GetComponentsInChildren<MeshRenderer>();
             foreach (var rend in renderers)
             {
-                if (rend != null)
-                    rend.material = highlight ? highlightSnapMaterial : rend.sharedMaterial;
+                if (rend == null) continue;
+
+                if (highlight && highlightSnapMaterial != null)
+                {
+                    rend.material = highlightSnapMaterial;
+                }
+                else if (!highlight && CachedMaterials.ContainsKey(rend))
+                {
+                    rend.materials = (Material[])CachedMaterials[rend].Clone();
+                }
             }
         }
 
@@ -271,22 +280,15 @@ namespace SnapFlow.Assembly
         {
             if (progressBar == null) return;
 
-            float val =
-                (float)_currentStep / steps.Count;
-
-
-            progressBar.value = val;
+            float val = (float)_currentStep / steps.Count;
+            progressBar.value = Mathf.Clamp01(val);
         }
 
         private void UpdateProgressText()
         {
             if (progressText == null) return;
 
-            string label =
-                _currentStep < steps.Count
-                    ? $"Step {(_currentStep + 1)}/{steps.Count} (Assembly Mode)"
-                    : $"Step {(_currentStep)}/{steps.Count} (Assembly Mode)";
-
+            string label = $"Step {Mathf.Min(_currentStep + 1, steps.Count)}/{steps.Count} (Assembly Mode)";
             progressText.text = label;
         }
 
@@ -295,49 +297,64 @@ namespace SnapFlow.Assembly
             if (stepDescriptionText == null || _currentStep < 0 || _currentStep >= steps.Count)
                 return;
 
-            stepDescriptionText.text = steps[_currentStep].StepDescription;
+            string description = steps[_currentStep].StepDescription ?? "";
+            stepDescriptionText.text = description;
         }
 
-        [Obsolete("Obsolete")]
+        private void ResetObjectByReference(Grabbable obj)
+        {
+            if (stepLookup.TryGetValue(obj, out var step))
+                ResetObject(step);
+        }
+
         private void ResetObject(AssemblyStep step)
         {
             if (step.objectToGrab == null) return;
-            StartCoroutine(ResetNextPhysicsFrame(step));
+            StartCoroutine(ResetObjectNextPhysicsFrame(step));
         }
 
-        [Obsolete("Obsolete")]
-        private static IEnumerator ResetNextPhysicsFrame(AssemblyStep step)
+        private IEnumerator ResetObjectNextPhysicsFrame(AssemblyStep step)
         {
-            yield return new WaitForFixedUpdate();
-
             Grabbable grab = step.objectToGrab;
+            if (grab == null) yield break;
+
             Transform t = grab.transform;
             Rigidbody rb = grab.GetComponent<Rigidbody>();
 
-            grab.enabled = false;   // 🔒 stop BNG interference
+            // Disable grabbing temporarily
+            grab.enabled = false;
 
             if (rb != null)
             {
                 rb.isKinematic = true;
-                
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
             }
 
-            t.position = step.initialPosition;
-            t.rotation = step.initialRotation;
+            yield return new WaitForFixedUpdate();
+
+            // Reset transform
+            t.position = CachedObjectPositions.ContainsKey(grab) 
+                ? CachedObjectPositions[grab] 
+                : step.initialPosition;
+            t.rotation = CachedObjectRotations.ContainsKey(grab) 
+                ? CachedObjectRotations[grab] 
+                : step.initialRotation;
 
             yield return null;
 
             if (rb != null)
                 rb.isKinematic = false;
 
-            grab.enabled = true;    // 🔓 re-enable grab
+            // Re-enable grabbing
+            grab.enabled = true;
         }
 
 
 
         private void PlaySound(AudioClip clip, Vector3 position)
         {
-            if (clip)
+            if (clip != null)
                 AudioSource.PlayClipAtPoint(clip, position);
         }
 
