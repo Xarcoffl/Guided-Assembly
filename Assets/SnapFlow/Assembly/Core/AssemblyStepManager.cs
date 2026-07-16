@@ -62,9 +62,9 @@ namespace SnapFlow.Assembly
                 return;
             }
 
-            CacheInitialTransforms();
+            // CacheInitialTransforms();
             CacheInitialMaterials();
-            InitializeStepLookup();
+            // InitializeStepLookup();
             SetupStep(_currentStep);
             UpdateProgressUI();
         }
@@ -208,7 +208,7 @@ namespace SnapFlow.Assembly
 
             HighlightSnapZone(step.targetSnapZone, false);
             step.onSnapEvents?.Invoke();
-            PlaySound(stepCompleteSound, step.targetSnapZone?.transform.position ?? Vector3.zero);
+            // PlaySound(stepCompleteSound, step.targetSnapZone?.transform.position ?? Vector3.zero);
 
             if (AssemblyEvents) Debug.Log($"[SnapFlow] Step {stepIndex + 1} completed: {snappedObject.name}");
 

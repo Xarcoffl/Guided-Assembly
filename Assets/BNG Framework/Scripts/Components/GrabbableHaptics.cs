@@ -14,7 +14,6 @@ namespace BNG {
         public bool HapticsOnValidRemotePickup = true;
         public bool HapticsOnCollision = true;
         public bool HapticsOnGrab = true;
-    
 
         public float VibrateFrequency = 0.3f;
         public float VibrateAmplitude = 0.1f;
@@ -34,7 +33,6 @@ namespace BNG {
         public override void OnRelease() {
             currentGrabber = null;
         }
-        
 
         // Fires if this is the closest grabbable but wasn't in the previous frame
         public override void OnBecomesClosestGrabbable(ControllerHand touchingHand) {
@@ -50,7 +48,7 @@ namespace BNG {
             }
         }
 
-        public void doHaptics(ControllerHand touchingHand) {
+        void doHaptics(ControllerHand touchingHand) {
             if(input) {
                 input.VibrateController(VibrateFrequency, VibrateAmplitude, VibrateDuration, touchingHand);
             }
