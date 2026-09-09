@@ -38,8 +38,15 @@ namespace SnapFlow.Disassembly
 
         public bool debuglog = false;
         public bool showgizmos = false;
-        public bool AssemblyEvents = false;
+        public bool DisassemblyEvents = false;
 
+
+
+
+        public void Awake()
+        {
+            CacheInitialMaterials();
+        }
         private void Start()
         {
             if (steps == null || steps.Count == 0)
@@ -48,8 +55,9 @@ namespace SnapFlow.Disassembly
                 return;
             }
 
-            CacheInitialMaterials();
-            _currentStep = steps.Count - 1;
+            
+            _currentStep = steps.Count -1;
+            Debug.Log(_currentStep);
             SetupStep(_currentStep);
             UpdateProgress();
         }
@@ -74,6 +82,7 @@ namespace SnapFlow.Disassembly
 
         private void SetupStep(int stepIndex)
         {
+            Debug.Log("setup step : " + stepIndex);
             if (stepIndex < 0 || stepIndex >= steps.Count)
             {
                 if (debuglog) Debug.Log("[SnapFlow] All steps disassembled!");
@@ -85,8 +94,10 @@ namespace SnapFlow.Disassembly
             {
                 if (step.sourceSnapZone != null)
                 {
-                    step.sourceSnapZone.StartingItem = step.objectToRemove;
+                    step.sourceSnapZone.HeldItem = step.objectToRemove;
                     step.sourceSnapZone.CanRemoveItem = false;
+                    if( step.sourceSnapZone.HeldItem == step.objectToRemove )
+                    Debug.Log("[SnapFlow] Configured snap zone for step: " + step.objectToRemove);
                 }
             }
 

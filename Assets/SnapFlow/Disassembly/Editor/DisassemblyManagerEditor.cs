@@ -26,7 +26,7 @@ namespace SnapFlow.Disassembly.Editor
 
         private SerializedProperty _showDebugLogs;
         private SerializedProperty _showGizmos;
-        private SerializedProperty _assemblyEvents;
+        private SerializedProperty _disassemblyEvents;
 
         private void OnEnable()
         {
@@ -39,7 +39,7 @@ namespace SnapFlow.Disassembly.Editor
             _onDisassemblyComplete = serializedObject.FindProperty("onDisassemblyComplete");
             _showGizmos = serializedObject.FindProperty("showgizmos");
             _showDebugLogs = serializedObject.FindProperty("debuglog");
-            _assemblyEvents = serializedObject.FindProperty("AssemblyEvents");
+            _disassemblyEvents = serializedObject.FindProperty("DisassemblyEvents");
             
             
             _reorderableSteps = new ReorderableList(serializedObject, _disassemblyProperty, true, true, false, true);
@@ -219,9 +219,9 @@ namespace SnapFlow.Disassembly.Editor
             EditorGUILayout.LabelField("Debug :",EditorStyles.whiteLabel);
             EditorGUILayout.PropertyField(_showDebugLogs, new GUIContent("Debug Logs"));
             EditorGUILayout.PropertyField(_showGizmos, new GUIContent("Show Gizmos"));
-            EditorGUILayout.PropertyField(_assemblyEvents, new GUIContent("Show Assembly Events"));
+            EditorGUILayout.PropertyField(_disassemblyEvents, new GUIContent("Show Assembly Events"));
             GUILayout.Space(10);
-            if (_assemblyEvents.boolValue)
+            if (_disassemblyEvents.boolValue)
             {
                 
                 EditorGUILayout.LabelField("Disassembly Event",EditorStyles.whiteLabel);
